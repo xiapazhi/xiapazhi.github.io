@@ -9,12 +9,13 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">Loading</div>
   <script>
     window.$docsify = {
       name: '虾爬の',
       repo: '',
       logo: '/_media/favicon.ico',
+      // onlyCover: true,
       // coverpage: true, // 封面
       loadSidebar: true,
       subMaxLevel: 2,
@@ -27,9 +28,23 @@
       //   // ...
       //   return time;
       // },
+
+      // 字数统计
+      countable:true,
+      fontsize:'0.9em',
+      color:'rgb(90,90,90)',
+      language:'chinese',
+
+      // 谷歌分析
+      ga: 'G-TL8ED3L6HP'
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!-- 字数统计 -->
+  <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
+  <!-- 谷歌分析 -->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script>
 </body>
 </html>
