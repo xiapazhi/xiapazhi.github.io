@@ -1,2 +1,3 @@
-- CENTOS7
-  * [搭建Factorio服务](CENTOS7/搭建Factorio服务)
+- [docsify](docsify/README)
+- centos7
+  * [搭建Factorio服务](centos7/搭建Factorio服务)

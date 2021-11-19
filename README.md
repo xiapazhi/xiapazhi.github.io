@@ -17,14 +17,3 @@
 > 故国神游，多情应笑我，早生华发。
 >
 > 人生如梦，一尊还酹江月。
-
-
-基于 docsify https://docsify.js.org/#/zh-cn/ 创建；
-
-快速开始：npm i docsify-cli -g
-
-初始化项目：docsify init ./
-
-本地预览：docsify serve docs
-
-阿巴阿巴阿巴~

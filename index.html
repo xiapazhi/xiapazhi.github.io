@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 
     <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
-    <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css"> -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
 </head>
 
 <body>
@@ -43,6 +43,11 @@
             // 谷歌分析
             ga: 'G-TL8ED3L6HP',
 
+            search: {
+                placeholder: '搜索',
+                noData: '没没没有结果',
+                hideOtherSidebarContent: true, // 是否隐藏其他侧边栏内容
+            },
         }
     </script>
 
@@ -52,24 +57,30 @@
     <!-- 字数统计 -->
     <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
 
+    <!-- 搜索 -->
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+
     <!-- 谷歌分析 -->
-    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script> -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script> -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script> -->
 
     <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
-    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
-  <script>
-    const gitalk = new Gitalk({
-      clientID: '025665920e774696dfa5',
-      clientSecret: '5e03433e57c6bc9ed9144e2dde49d88140a6f75a',
-      repo: 'Github repo',
-      owner: 'Github repo owner',
-      admin: ['Github repo collaborators, only these guys can initialize github issues'],
-      // facebook-like distraction free mode
-      distractionFreeMode: false
-    })
-  </script> -->
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+    <script>
+        const gitalk = new Gitalk({
+            clientID: '31afa461ead75ccc76b7',
+            clientSecret: '0c842863a7e2a16d68a033f2fd0e66b6de26abf4',
+            repo: 'xiapazhi.github.io',
+            owner: 'xiapazhi',
+            admin: ['xiapazhi'],
+            // facebook-like distraction free mode
+            distractionFreeMode: false
+        })
+    </script>
+
+    <!-- 图片缩放 -->
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
 </body>
 
 </html>
