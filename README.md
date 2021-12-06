@@ -1,3 +1,7 @@
+
+<body>
+<div style="display:inline-block;width:50%">
+
 ## 念奴娇·赤壁怀古
 
 苏轼 / 宋
@@ -17,3 +21,9 @@
 > 故国神游，多情应笑我，早生华发。
 >
 > 人生如梦，一尊还酹江月。
+
+</div>
+<div style="display:inline-block;width:50%;float:right">
+abababa
+</div>
+</body>
