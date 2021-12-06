@@ -1,4 +1,3 @@
-- [docsify](docsify/README)
 - centos7
   * [搭建Factorio服务](Centos_7/搭建Factorio服务)
 - 猎魔手记
