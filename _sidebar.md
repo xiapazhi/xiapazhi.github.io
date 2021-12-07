@@ -1,5 +1,7 @@
 - centos7
   * [搭建Factorio服务](Centos_7/搭建Factorio服务)
+  * [Nginx](Centos_7/nginx)
+  * [PostgreSQL](Centos_7/postgresql)
 - 猎魔手记
   * [技术领导力实战笔记-简记](猎魔手记/技术领导力实战笔记-简记)
   * [SQL必知必会-笔记](猎魔手记/SQL必知必会-笔记)

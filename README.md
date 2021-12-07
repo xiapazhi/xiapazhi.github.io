@@ -1,6 +1,6 @@
 
 <body>
-<div style="display:inline-block;width:50%">
+<div style="display:inline-block;width:50%;min-width:320px;float:left">
 
 ## 念奴娇·赤壁怀古
 
@@ -23,7 +23,11 @@
 > 人生如梦，一尊还酹江月。
 
 </div>
-<div style="display:inline-block;width:50%;float:right">
-abababa
+<div style="display:inline-block;width:50%;float:left">
+<div style="margin-top:95px">
+
+阿巴阿巴阿巴~
+
+</div>
 </div>
 </body>
