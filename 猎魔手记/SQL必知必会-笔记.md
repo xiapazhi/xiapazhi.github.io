@@ -144,3 +144,123 @@ MySQL 是典型的 C/S 架构，即 Client/Server 架构，服务器端程序使
 ### 总结
 
 ![](https://static001.geekbang.org/resource/image/02/f1/02719a80d54a174dec8672d1f87295f1.jpg)
+
+## 使用DDL创建数据库
+
+DDL 的英文全称是 Data Definition Language，即数据定义语言。它定义了数据库的结构和数据表的结构。
+
+DDL 是 DBMS 的核心组件，也是 SQL 的重要组成部分，DDL 的正确性和稳定性是整个 SQL 运行的重要基础。
+
+在 DDL 中，我们常用的功能是增删改，分别对应的命令是 CREATE、DROP 和 ALTER。需要注意的是，在执行 DDL 的时候，不需要 COMMIT （COMMIT 用以提交事务等），就可以完成执行任务。
+
+### - 定义数据库
+
+```sql
+CREATE DATABASE nba; // 创建一个名为nba的数据库
+DROP DATABASE nba; // 删除一个名为nba的数据库
+```
+
+### - 定义数据表
+
+```sql
+CREATE TABLE [table_name](字段名 数据类型，......)
+
+例如
+
+DROP TABLE IF EXISTS `player`;
+
+CREATE TABLE `player`  (
+  `player_id` int(4) NOT NULL AUTO_INCREMENT,
+  `player_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`player_id`) USING BTREE, 
+  UNIQUE INDEX `player_name`(`player_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+```
+
+数据表和字段使用反引号，以避免它们的名称与 MySQL 保留字段相同；
+
+其中 player_name ：
+
+字段的字符编码是 utf8，  
+排序规则是utf8_general_ci，代表对大小写不敏感，  
+如果设置为utf8_bin，代表对大小写敏感，  
+还有许多其他排序规则~
+
+使用 UNIQUE INDEX 设置唯一索引，唯一索引和普通索引（NORMAL INDEX）的区别在于它对字段进行了唯一性的约束
+
+player_id 使用 使用PRIMARY KEY 设置主键，同时索引方法采用 BTREE。
+
+### - 修改表结构
+
+#### - 添加字符
+
+```sql
+ALTER TABLE player ADD age int(11);
+```
+
+#### - 修改字段名
+
+```sql
+ ALTER TABLE player CHANGE age player_age int(11);
+```
+
+#### - 修改字段的数据类型
+
+```sql
+ALTER TABLE player MODIFY column player_age float(3,1)
+```
+
+#### - 删除字段
+
+```sql
+ALTER TABLE player DROP COLUMN player_age;
+```
+
+### 数据表常见约束
+
+- 主键约束：
+  主键起的作用是唯一标识一条记录，不能重复，不能为空，即 UNIQUE + NOT NULL 。  
+  一个数据表的主键只能有一个。  
+  主键可以是一个字段，也可以由多个字段复合组成（即联合主键，通过多个字段确定唯一性）。
+
+- 外键约束：
+  外键确保了表与表之间引用的完整性。  
+  一个表中的外键对应另一张表的主键。  
+  外键可以重复，也可以为空。
+
+- 唯一性约束
+- NOT NULL 约束
+- DEFAULT 约束
+- CHECK 约束   
+  MySQL 8.0.16 以后版本生效。数据库层字段校验；  
+  例如
+  比如我们可以对身高 height 的数值进行 CHECK 约束
+  ```sql
+  ALTER TABLE player ADD height int(4) CHECK(height>0 AND height<300)
+  ```
+
+## 数据表的设计原则
+
+原则就是简单可复用
+
+1. 表的个数越少越好  
+   RDBMS 的核心在于对实体和联系的定义，数据表越少，证明实体和联系设计得越简洁，既方便理解又方便操作。  
+   实体抽象表现为现实中的一个对象，也不能刻意追求表少，合并不相关的属性；
+
+2. 数据表中的字段个数越少越好  
+   字段个数越多，数据冗余的可能性越大。  
+   所以可以减少可计算得到的字段存储；
+
+3. 数据表中联合主键的字段个数越少越好  
+   联合主键中的字段越多，占用的索引空间越大，不仅会加大理解难度，还会增加运行时间和索引空间；
+
+4. 使用主键和外键越多越好 （颇有争议）  
+   数据库的设计实际上就是定义各种表，以及各种字段之间的关系。这些关系越多，证明这些实体之间的冗余度越低，利用度越高。这样做的好处在于不仅保证了数据表之间的独立性，还能提升相互之间的关联使用率。  
+    外键的使用，在数据库层面保证了数据的完整于一至性，同时增加资源开销；
+
+### 阶段总结
+
+![](https://static001.geekbang.org/resource/image/80/c1/80aecedfad59aad06cc08bb9bca721c1.jpg)    
+   
+
+   
