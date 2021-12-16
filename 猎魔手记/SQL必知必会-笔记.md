@@ -262,5 +262,93 @@ ALTER TABLE player DROP COLUMN player_age;
 
 ![](https://static001.geekbang.org/resource/image/80/c1/80aecedfad59aad06cc08bb9bca721c1.jpg)    
    
+## 数据检索 SELECT
 
-   
+### 基础语法
+
+- 查询列
+  ```sql
+  SELECT column_name, column_name2 FROM table_name
+  ```
+  查所有列
+  ```sql
+  SELECT * FROM table_name
+  ```
+- 起别名
+  ```sql
+  SELECT column_name AS n FROM table_name
+  ```
+
+- 常数
+  ```sql
+  SELECT '王者荣耀' as column_name, name FROM table_name
+  ```
+
+- 去重 DISTINCT
+  ```sql
+  SELECT DISTINCT column_name FROM table_name
+  ```
+  需注意：
+  - DISTINCT 需要放到所有列名的前面
+  - DISTINCT 其实是对后面所有列名的组合进行去重
+  
+- 排序 ORDER BY
+  ```sql
+  SELECT * FROM table_name ORDER BY column_name DESC
+  ```
+  需注意：
+  - ORDER BY 后面可以有一个或多个列名，如果是多个列名进行排序，会按照后面第一个列先进行排序，当第一列的值相同的时候，再按照第二列进行排序，以此类推。
+  - ORDER BY 后面可以注明排序规则，ASC 代表递增排序（默认值），DESC 代表递减排序。
+  - 非选择列排序：ORDER BY 可以使用非选择列进行排序，所以即使在 SELECT 后面没有这个列名，你同样可以放到 ORDER BY 后面进行排序。
+
+- 约束数量 LIMIT
+  - MySQL、PostgreSQL、MariaDB 和 SQLite ： LIMIT
+    ```sql
+    SELECT * FROM table_name LIMIT 7
+    ```
+  - SQL Server 和 Access ：TOP
+    ```sql
+    SELECT TOP 7 * FROM table_name
+    ```
+  - DB2 ：FETCH FIRST 7 ROWS ONLY
+    ```sql
+    SELECT * FROM table_name FETCH FIRST 5 ROWS ONLY
+    ```
+  - Oracle ：ROWNUM
+    ```sql
+    SELECT * FROM table_name WHERE ROWNUM <=5
+    ```
+  约束返回结果的数量可以减少数据表的网络传输量，提升查询效率
+
+### SELECT 的关键字顺序
+
+语法顺序，不能颠倒
+```sql
+SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...
+```
+
+### SELECT 语句的执行顺序
+
+```sql
+
+FROM > WHERE > GROUP BY > HAVING > SELECT 的字段 > DISTINCT > ORDER BY > LIMIT
+```
+
+例
+
+```sql
+
+SELECT DISTINCT count(*) as num                                                     #顺序5
+FROM table_name JOIN table_name2 ON table_name.id = table_name2.table_name_id       #顺序1
+WHERE column_name > 1.80                                                            #顺序2
+GROUP BY table_name.id                                                              #顺序3
+HAVING num > 2                                                                      #顺序4
+ORDER BY num DESC                                                                   #顺序6
+LIMIT 7                                                                             #顺序7
+```
+
+在 SELECT 语句执行这些步骤的时候，每个步骤都会产生一个虚拟表，然后将这个虚拟表传入下一个步骤中作为输入
+
+### 阶段总结
+
+![](https://static001.geekbang.org/resource/image/c8/a8/c88258e72728957b43dc2441d3f381a8.jpg)
