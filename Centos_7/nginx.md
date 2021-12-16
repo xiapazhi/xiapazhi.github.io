@@ -63,7 +63,7 @@
 
 - 作为简单的文件下载服务（竟然可以播放视频）
 
-    ```json
+    ```
     server {  
         listen       80;        #端口  
         server_name  localhost;   #服务名  
@@ -79,7 +79,7 @@
     ```
 - 作为代理 如 flask：
 
-    ```json
+    ```
     http {
         server {
             listen       80; 
@@ -92,9 +92,9 @@
     }
     ```
 
-- 开启压缩和缓存
-
-    ```json
+- 开启压缩和缓存 [质子源 实例]
+    
+    ```
     http {
         #proxy_cache_path / levels=1:2 keys_zone=nuget-cache:20m max_size=1g inactive=24h use_temp_path=off;
 
@@ -128,6 +128,70 @@
                 access_log off;
                 proxy_pass http://localhost:5000;
             }
+        }
+    }
+    ```
+
+- 代理 [Clover [vue2]实例]
+
+    ```
+    user  nginx;
+    worker_processes  auto;
+
+    error_log  /var/log/nginx/error.log notice;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+
+        #access_log  /var/log/nginx/access.log  main;
+        access_log  off;
+
+        sendfile        on;
+        #tcp_nopush     on;
+
+        keepalive_timeout  65;
+
+        gzip  on;
+        gzip_min_length 512k;
+        gzip_comp_level 6;
+        gzip_vary on;
+        gzip_types text/plain application/javascript application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
+
+        include /etc/nginx/conf.d/*.conf;
+
+        server{
+            listen       8080;
+            server_name  clover;
+            root        /var/site/clover/site/dist;#vue项目的打包后的dist
+
+            location /_api/ {
+                proxy_pass	http://127.0.0.1:7002/;
+            }
+
+            location /_file/ {
+                proxy_pass	http://127.0.0.1:7002/;
+
+                add_header Cache-Control "private,max-age=30*24*3600";
+                expires 30d;
+                access_log off;
+            }
+
+            location ~* \.(css|js)$ {
+                add_header Cache-Control "private,max-age=30*24*3600";
+                expires 30d;
+                access_log off;
+            }
+            
         }
     }
     ```
