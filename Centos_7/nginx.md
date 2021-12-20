@@ -175,6 +175,7 @@
             root        /var/site/clover/site/dist;#vue项目的打包后的dist
 
             location /_api/ {
+                proxy_set_header  X-Real-IP  $remote_addr; # 真实ip
                 proxy_pass	http://127.0.0.1:7002/;
             }
 
