@@ -1,3 +1,7 @@
+const doNothing = () => {
+    window.event ? window.event.cancelBubble = true : e.stopPropagation();
+}
+
 const showNote = (e) => {
     window.event ? window.event.cancelBubble = true : e.stopPropagation();
     document.getElementById("gitalk-container").classList.add("show-note")

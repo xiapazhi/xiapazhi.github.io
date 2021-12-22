@@ -30,7 +30,7 @@
 
 <body onclick="hideNote()">
     <!-- 定义导航栏  // 文档的链接都要以 #/ 开头。-->
-    <nav>
+    <nav class="content" style="position: fixed; margin: 0; background-color: #fff; padding: 12px 32px; height: 50px;">
         <b style="cursor: pointer;user-select: none;" onclick="showNote()">
             留言板
             <img style="height: 24px; position: relative; top: 6px; margin-left: 3px;" src="./_media/icon/留言板.png" />
@@ -42,7 +42,7 @@
     <div id="app">Loading</div>
 
     <!-- gitalk 评论内容渲染 -->
-    <div id="gitalk-container" class="gitalk-container"></div>
+    <div id="gitalk-container" class="gitalk-container" onclick="doNothing()"></div>
 
     <script src="./index.js"></script>
 
