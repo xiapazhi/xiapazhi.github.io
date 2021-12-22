@@ -1,9 +1,21 @@
+nav b:hover {
+    color: darkorange;
+}
+
 .gitalk-container {
     position: fixed;
     top: 0;
-    right: 0;
+    right: -606px;
     background: white;
     width: 600px;
     height: 100vh;
-    box-shadow: -6px 0px 5px #888888
+    box-shadow: -6px 0px 5px #888888;
+    padding: 0 12px;
+    z-index: 999;
+    transition: right 0.2s;
+}
+
+.show-note {
+    display: block;
+    right: 0px;
 }

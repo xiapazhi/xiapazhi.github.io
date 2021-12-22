@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
     <link rel="icon" href="/_media/favicon.ico">
-    
+
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 
     <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
@@ -28,9 +28,24 @@
     </script>
 </head>
 
-<body>
+<body onclick="hideNote()">
+    <!-- 定义导航栏  // 文档的链接都要以 #/ 开头。-->
+    <nav>
+        <b style="cursor: pointer;user-select: none;" onclick="showNote()">
+            留言板
+            <img style="height: 24px; position: relative; top: 6px; margin-left: 3px;" src="./_media/icon/留言板.png" />
+        </b>
+        <!-- <a href="#/zh-cn/">中文</a> -->
+    </nav>
+
+    <!-- docsify 内容渲染 -->
     <div id="app">Loading</div>
+
+    <!-- gitalk 评论内容渲染 -->
     <div id="gitalk-container" class="gitalk-container"></div>
+
+    <script src="./index.js"></script>
+
     <script>
         window.$docsify = {
             name: '虾爬の',
