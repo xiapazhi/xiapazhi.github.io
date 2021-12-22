@@ -9,10 +9,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
     <link rel="icon" href="/_media/favicon.ico">
+    
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 
     <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <link rel="stylesheet" href="./index.css">
 
     <!-- 百度统计 -->
     <script>
@@ -28,6 +30,7 @@
 
 <body>
     <div id="app">Loading</div>
+    <div id="gitalk-container" class="gitalk-container"></div>
     <script>
         window.$docsify = {
             name: '虾爬の',
@@ -78,7 +81,8 @@
     <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script> -->
 
     <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
-    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
+    <!-- 下面这个脚本会在每个文章下出现评论 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script> -->
     <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
     <script>
         const gitalk = new Gitalk({
@@ -90,7 +94,9 @@
             // facebook-like distraction free mode
             distractionFreeMode: false
         })
-    </script> -->
+
+        gitalk.render('gitalk-container')
+    </script>
 
     <!-- 图片缩放 -->
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
