@@ -1,7 +1,9 @@
+/* 导航栏 */
 nav b:hover {
     color: darkorange;
 }
 
+/* gitalk 评论 */
 .gitalk-container {
     position: fixed;
     top: 0;
@@ -15,7 +17,22 @@ nav b:hover {
     transition: right 0.2s;
 }
 
+/* 通过 js 加载此 class 弹出 gitalk */
 .show-note {
     display: block;
     right: 0px;
+}
+
+#start_time_difference {
+    text-align: left;
+    width: 36px;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: width 0.2s;
+    cursor: pointer;
+}
+
+#start_time_difference:hover {
+    width: 152px;
 }

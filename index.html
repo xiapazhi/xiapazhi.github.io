@@ -16,6 +16,10 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
     <link rel="stylesheet" href="./index.css">
 
+    <!-- 不蒜子计数 -->
+    <!-- http://ibruce.info/ -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
     <!-- 百度统计 -->
     <script>
         var _hmt = _hmt || [];
@@ -27,16 +31,20 @@
         })();
     </script>
 
-    <!-- Font Awesome 支持看板娘 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css">
+    <!-- Font Awesome 支持 xiapazhi/live2d-widget 看板娘 -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css"> -->
+
 </head>
 
 <body onclick="hideNote()">
     <!-- 定义导航栏  // 文档的链接都要以 #/ 开头。-->
     <nav class="content" style="position: fixed; margin: 0; background-color: #fff; padding: 12px 32px; height: 50px;">
         <!-- 不蒜子计数 -->
+        <p style="display: inline-block; float: left;" title="运行时间">
+            <span id="start_time_difference"> 计算中... </span>
+        </p>
         <p style="display: inline-block; float: left;" title="访问人次">
-            <span id="busuanzi_value_site_uv"></span> 游
+            <span id="busuanzi_value_site_uv">NaN</span> 次装载
         </p>
 
         <b style="cursor: pointer;user-select: none;" onclick="showNote()">
@@ -94,6 +102,31 @@
     <!-- Docsify v4 -->
     <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
 
+    <!-- 计算运行时间 -->
+    <script>
+        let begainTime = new Date(2021, 10, 22, 08, 00, 00);
+        let dayMs = 24 * 60 * 60 * 1000
+        let minMs = 60 * 60 * 1000
+        let sMs = 60 * 1000
+
+        const setDiff = () => {
+            let now = new Date()
+            let drr = now.getTime() - begainTime.getTime();
+            let day = parseInt(drr / dayMs);
+            let hours = parseInt(drr % dayMs / minMs);
+            let minutes = parseInt(drr % minMs / sMs);
+            let seconds = parseInt(drr % sMs / 1000);
+
+            let text = `
+                <span>${day} 天</span> 
+                <span class="diff-detail">${hours} 时 ${minutes} 分 ${seconds} 秒</span>`;
+            document.getElementById('start_time_difference').innerHTML = text
+        }
+
+        setDiff()
+        setInterval(setDiff, 1000)
+    </script>
+
     <!-- 字数统计 -->
     <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
 
@@ -126,12 +159,37 @@
     <!-- 图片缩放 -->
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
 
-    <!-- 不蒜子计数 -->
-    <!-- http://ibruce.info/ -->
-    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <!-- 看板娘 这个比较繁复 -->
+    <!-- <script src="https://cdn.jsdelivr.net/gh/xiapazhi/live2d-widget@latest/autoload.js"></script> -->
 
     <!-- 看板娘 -->
-    <script src="https://cdn.jsdelivr.net/gh/xiapazhi/live2d-widget@latest/autoload.js"></script>
+    <script src="https://unpkg.com/live2d-widget/lib/L2Dwidget.min.js"></script>
+    <script>
+        L2Dwidget.init({
+            "model": {
+                //jsonpath控制显示那个小萝莉模型，
+                //(切换模型需要改动)
+                jsonPath: "https://unpkg.com/live2d-widget-model-koharu@1.0.5/assets/koharu.model.json",
+                // jsonPath: "https://unpkg.com/live2d-widget-model-izumi@1.0.5/assets/izumi.model.json",
+                "scale": 1
+            },
+            "display": {
+                "position": "right", //看板娘的表现位置
+                "width": 210,  //小萝莉的宽度
+                "height": 420, //小萝莉的高度
+                "hOffset": 0,
+                "vOffset": -80
+            },
+            "mobile": {
+                "show": false,
+                "scale": 0.5
+            },
+            "react": {
+                "opacityDefault": 0.7,
+                "opacityOnHover": 0.2
+            }
+        });
+    </script>
 </body>
 
 </html>
