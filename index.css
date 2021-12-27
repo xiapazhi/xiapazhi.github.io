@@ -1,3 +1,9 @@
+/* 试网页置灰的哀悼样式  */
+.lament {
+    FILTER: gray;
+    -webkit-filter: grayscale(100%);
+}
+
 /* 导航栏 */
 nav b:hover {
     color: darkorange;

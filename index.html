@@ -12,16 +12,19 @@
 
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 
-    <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
-    <link rel="stylesheet" href="./index.css">
-
     <!-- 不蒜子计数 -->
     <!-- http://ibruce.info/ -->
     <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 
+    <!-- Gitalk，一个现代化的，基于Preact和Github Issue的评论系统。 -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+    <link rel="stylesheet" href="./index.css">
+
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/external-script.min.js"></script>
+
     <!-- 百度统计 -->
-    <script>
+    <script src="https://hm.baidu.com/hm.js?af1378cb4305d2a8a0bc6341d2fe27cf"></script>
+    <!-- <script>
         var _hmt = _hmt || [];
         (function () {
             var hm = document.createElement("script");
@@ -29,14 +32,16 @@
             var s = document.getElementsByTagName("script")[0];
             s.parentNode.insertBefore(hm, s);
         })();
-    </script>
+    </script> -->
 
     <!-- Font Awesome 支持 xiapazhi/live2d-widget 看板娘 -->
     <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css"> -->
 
+    <link href="https://cdn.bootcss.com/KaTeX/0.10.0/katex.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/KaTeX/0.10.0/katex.min.js"></script>
 </head>
 
-<body onclick="hideNote()">
+<body id="BODDY" onclick="hideNote()">
     <!-- 定义导航栏  // 文档的链接都要以 #/ 开头。-->
     <nav class="content" style="position: fixed; margin: 0; background-color: #fff; padding: 12px 32px; height: 50px;">
         <!-- 不蒜子计数 -->
@@ -83,10 +88,12 @@
             // },
 
             // 字数统计
-            countable: true,
-            fontsize: '0.9em',
-            color: 'rgb(90,90,90)',
-            language: 'chinese',
+            count: {
+                countable: true,
+                fontsize: '0.9em',
+                color: 'rgb(90,90,90)',
+                language: 'chinese',
+            },
 
             // 谷歌分析
             ga: 'G-TL8ED3L6HP',
@@ -96,36 +103,26 @@
                 noData: '没没没有结果',
                 hideOtherSidebarContent: true, // 是否隐藏其他侧边栏内容
             },
+
+            markdown: {
+                renderer: {
+                    code: function (code, lang) {
+                        if (lang === "tex") {
+                            return (
+                                '<span class="tex">' + katex.renderToString(code, {
+                                    throwOnError: false
+                                }) + '</span>'
+                            );
+                        }
+                        return this.origin.code.apply(this, arguments);
+                    }
+                }
+            }
         }
     </script>
 
     <!-- Docsify v4 -->
     <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-
-    <!-- 计算运行时间 -->
-    <script>
-        let begainTime = new Date(2021, 10, 22, 08, 00, 00);
-        let dayMs = 24 * 60 * 60 * 1000
-        let minMs = 60 * 60 * 1000
-        let sMs = 60 * 1000
-
-        const setDiff = () => {
-            let now = new Date()
-            let drr = now.getTime() - begainTime.getTime();
-            let day = parseInt(drr / dayMs);
-            let hours = parseInt(drr % dayMs / minMs);
-            let minutes = parseInt(drr % minMs / sMs);
-            let seconds = parseInt(drr % sMs / 1000);
-
-            let text = `
-                <span>${day} 天</span> 
-                <span class="diff-detail">${hours} 时 ${minutes} 分 ${seconds} 秒</span>`;
-            document.getElementById('start_time_difference').innerHTML = text
-        }
-
-        setDiff()
-        setInterval(setDiff, 1000)
-    </script>
 
     <!-- 字数统计 -->
     <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
