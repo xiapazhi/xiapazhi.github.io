@@ -29,6 +29,12 @@ nav b:hover {
     right: 0px;
 }
 
+/* medium-zoom 层级 以遮盖导航栏 */
+.medium-zoom-image--opened {
+    z-index: 999;
+}
+
+/* 运行时间样式 */
 #start_time_difference {
     text-align: left;
     width: 36px;
