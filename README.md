@@ -26,7 +26,8 @@
 <div style="display:inline-block;width:50%;float:left">
 <div style="margin-top:95px">
 
-阿巴阿巴阿巴~
+[Github 直达](https://github.com/xiapazhi) /
+[Gitee 直达](https://gitee.com/yuan_yi)
 
 </div>
 </div>
