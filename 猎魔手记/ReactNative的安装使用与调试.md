@@ -23,6 +23,30 @@
     ```shell
     npm install yarn -g
     ```
+- ###### 安装 [Java Runtime Environment](https://www.java.com/zh-CN/) [JRE]
+  
+  > 若运行时遇到如下错误，则需要安装 java 提供 jave 运行时环境，配置 JAVA_HOME
+
+  ![](../_media/猎魔笔记/ReactNative的安装使用与调试/JAVA_ERROR.png)
+
+  安装成功后，需配置环境变量 JAVA_HOME
+
+  操作路径:  <kbd>我的电脑/此电脑（右键）</kbd> > <kbd>属性</kbd> > <kbd>关于</kbd> > <kbd>[相关设置]高级系统设置</kbd> > <kbd>环境变量</kbd> > <kbd>[系统变量]新建</kbd>
+
+  ![](../_media/猎魔笔记/ReactNative的安装使用与调试/JAVA_HOME.png)
+
+  - 添加工具目录到环境变量 Path
+
+  操作路径:  <kbd>我的电脑/此电脑（右键）</kbd> > <kbd>属性</kbd> > <kbd>关于</kbd> > <kbd>[相关设置]高级系统设置</kbd> > <kbd>环境变量/用户变量</kbd> > <kbd>Path</kbd> > <kbd>编辑</kbd>
+  
+  依次添加
+
+  ```
+    %JAVA_HOME%\bin
+    %JAVA_HOME%\jre\bin
+  ```
+
+  ![](../_media/猎魔笔记/ReactNative的安装使用与调试/JAVA_PATH.png)
 
 - ###### 需要 Java Development Kit [JDK] 版本 >= 11
 
@@ -84,7 +108,7 @@
 
   ![](../_media/猎魔笔记/ReactNative的安装使用与调试/ANDROID_HOME_TOOLS.png)
 
-  > 你需要关闭现有的命令符提示窗口然后重新打开，这样新的环境变量才能生效。
+> 你需要关闭现有的命令符提示窗口然后重新打开或重启计算机，这样新的环境变量才能生效。
 
 ## 创建新项目
 
@@ -112,9 +136,11 @@ ATTENTION 尤其需要注意：
   - [使用网易MuMu模拟器](https://mumu.163.com/)
     
     下载安装并打开后，在命令行[执行](https://mumu.163.com/2017/12/19/25241_730476.html?mnqjc)
+    
     ```
     adb connect 127.0.0.1:7555
     ```
+
     即可使用，相较 Android Studio 创建的 虚拟设备，更快、更便捷。
 
 ## 编译并运行 React Native 应用
@@ -128,3 +154,5 @@ yarn android
 # 或者
 yarn react-native run-android
 ```
+
+在弹出的终端中输入 r 可以编译运行
