@@ -108,4 +108,23 @@ ATTENTION 尤其需要注意：
 
 - [使用 Android 真机](https://www.react-native.cn/docs/running-on-device)
 - 使用 Android 模拟器
-  - 使用 Android Studio 创建 虚拟设备
+  - [使用 Android Studio 创建 虚拟设备](https://developer.android.com/studio/run/managing-avds.html)
+  - [使用网易MuMu模拟器](https://mumu.163.com/)
+    
+    下载安装并打开后，在命令行[执行](https://mumu.163.com/2017/12/19/25241_730476.html?mnqjc)
+    ```
+    adb connect 127.0.0.1:7555
+    ```
+    即可使用，相较 Android Studio 创建的 虚拟设备，更快、更便捷。
+
+## 编译并运行 React Native 应用
+
+```
+cd AwesomeProject
+# 安装依赖
+yarn
+# 运行
+yarn android
+# 或者
+yarn react-native run-android
+```
