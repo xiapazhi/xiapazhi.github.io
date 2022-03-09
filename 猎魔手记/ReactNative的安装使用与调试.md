@@ -155,4 +155,34 @@ yarn android
 yarn react-native run-android
 ```
 
-在弹出的终端中输入 r 可以编译运行
+![](../_media/猎魔笔记/ReactNative的安装使用与调试/START.png)
+
+在上面弹出的终端中输入 r 可以重新编译运行；
+
+输入 d 可以调出操作菜单，可以选择其中的  Debug 打开自带的调试工具；
+
+![](../_media/猎魔笔记/ReactNative的安装使用与调试/D_MENU.png)
+
+## 调试
+
+- Chrome
+  
+  在终端中输入 d 调出操作菜单，选择 Debug 后一般会默认打开 chrome 浏览器，在打开的页面按下 f12 ，即可更为方便的查看日志信息；
+
+  ![](../_media/猎魔笔记/ReactNative的安装使用与调试/CHROME_DEBUG.png)
+
+  在此模式下，目前尽可以查看日志信息、堆栈信息、代码断点；无法查看网络请求信息；
+
+- VSCode
+  
+  安装插件 React Native Tools
+
+- NPM 启动服务
+  
+  安装 react-native-debugger
+
+- filpper
+  
+  FaceBook 官方工具；
+
+  V react-native >= 0.62

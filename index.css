@@ -37,7 +37,7 @@ nav b:hover {
 /* 运行时间样式 */
 #start_time_difference {
     text-align: left;
-    width: 36px;
+    width: 42px;
     display: block;
     overflow: hidden;
     white-space: nowrap;
