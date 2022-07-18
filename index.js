@@ -51,6 +51,8 @@ function isMobile () {
 window.onload = () => {
     if (isMobile()) {
         // todo 移动端样式优化
+    } else {
+        document.getElementById("gitalk-but").style.display = "block"
     }
     // 12/13 国家公祭日
     if (['12/13'].some(d => {
