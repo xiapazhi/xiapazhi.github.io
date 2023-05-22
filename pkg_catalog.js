@@ -4,7 +4,7 @@ const path = require('path');
 const currentDir = './'; // 当前文件夹
 const sidebarFile = '_sidebar.md'; // 侧边栏文件名
 const ignoreDirs = ['.git', '_media',]; // 忽略的文件夹名称
-const ignoreFiles = ['README.md',]; // 忽略的文件夹名称
+const ignoreFiles = ['README.md','_coverpage.md','_sidebar.md']; // 忽略的文件夹名称
 
 function removeLastMd (str) {
     const lastDotMd = str.lastIndexOf('.md');

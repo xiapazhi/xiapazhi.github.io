@@ -3,8 +3,6 @@
   * [postgresql](Centos_7/postgresql)
   * [常用命令](Centos_7/常用命令)
   * [搭建Factorio服务](Centos_7/搭建Factorio服务)
-  * [_coverpage](./_coverpage)
-  * [_sidebar](./_sidebar)
 - 文言古句
   * [滕王阁序](文言古句/滕王阁序)
 - 猎魔手记
