@@ -47,6 +47,8 @@
     <!-- https://sivan.github.io/heti/ -->
     <!-- <link rel="stylesheet" href="//unpkg.com/heti/umd/heti.min.css"> -->
 
+    <!-- 回到顶部组件 -->
+    <script src="https://cdn.jsdelivr.net/gh/Sumsung524/docsify-backTop/dist/docsify-backTop.min.js"></script>
     <!-- 自定义滚动条 -->
     <style>
         /* 自定义滚动条 */
@@ -102,10 +104,11 @@
             name: '虾爬の',
             repo: '',
             logo: '/_media/favicon.ico',
+            formatUpdated: '{YYYY}/{MM}/{DD} {HH}:{mm}',
             // onlyCover: true,
             // coverpage: true, // 封面
             loadSidebar: true,
-            subMaxLevel: 2,
+            subMaxLevel: 3,
             auto2top: true,
             mergeNavbar: true,
 
@@ -141,7 +144,7 @@
                         return this.origin.code.apply(this, arguments);
                     }
                 }
-            }
+            },
         }
     </script>
 
