@@ -56,6 +56,24 @@
     setsebool -P httpd_can_network_connect 1
     ```
 
+2. Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+    1. 端口被占用：
+    2. 配置文件错误
+       使用命令检查配置文件
+       ```
+       nginx -t
+       ```
+3. ERR_CONTENT_LENGTH_MISMATCH
+   ```
+   # nginx.conf
+   http{
+    proxy_buffering off;
+    proxy_max_temp_file_size 0;
+   }
+   ```
+
+
 # 修改配置
 
 - 文件位置：/etc/nginx/
