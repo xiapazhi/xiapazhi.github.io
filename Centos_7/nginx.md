@@ -56,6 +56,24 @@
     setsebool -P httpd_can_network_connect 1
     ```
 
+2. Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
+
+    1. 端口被占用：
+    2. 配置文件错误
+       使用命令检查配置文件
+       ```
+       nginx -t
+       ```
+3. ERR_CONTENT_LENGTH_MISMATCH
+   ```
+   # nginx.conf
+   http{
+    proxy_buffering off;
+    proxy_max_temp_file_size 0;
+   }
+   ```
+
+
 # 修改配置
 
 - 文件位置：/etc/nginx/
@@ -77,6 +95,20 @@
         }
     } 
     ```
+
+- 代理 webSocket
+  ```
+  location ~/socket.io/(.*) {
+    proxy_pass http://127.0.0.1:7012; 
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_set_header X-NginX-Proxy true;
+    proxy_redirect off;
+  }
+  ```
+
 - 作为代理 如 flask：
 
     ```
@@ -196,3 +228,41 @@
         }
     }
     ```
+
+## windows 常用操作命令
+`在根目录下,打开cmd`
+
+1. 查看Nginx的版本号：
+    ```
+    nginx -v
+    ```
+2. 启动Nginx：
+    ```
+    start nginx  
+    或  
+    nginx.exe
+    ```
+3. 快速停止或关闭Nginx
+    ```
+    nginx -s stop
+    ```
+4. 正常停止或关闭Nginx：
+    ```
+    nginx -s quit
+    ```
+5. 配置文件修改重装载命令：
+   ```
+    nginx -s reload
+    ```
+6. 查看nginx进程
+   ```
+    tasklist /fi "imagename eq nginx.exe"
+    ```
+7. 查看所有nginx进程
+    ```
+    tasklist /fi "imagename eq nginx.exe"
+    ```
+8. 彻底停止nginx服务
+   ```
+    taskkill /f /t /im nginx.exe
+    ``` 
