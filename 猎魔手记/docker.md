@@ -114,3 +114,84 @@
     ```
     systemctl status docker
     ```
+
+    ---
+
+7. 修改内核参数、开启包转发功能  
+   - 内核参数修改：br_netfilter 模块用于将桥接流量转发至 iptables 链
+  
+        加载内核模块
+        ```
+        modprobe br_netfilter
+        ```
+        >modprobe 是一个用于管理 Linux 内核模块的命令。Linux 内核模块是一种动态加载到内核中的软件组件，用于添加新的功能、设备驱动或修改内核行为。
+
+        >modprobe 命令允许你在运行时加载、卸载、列出和管理这些内核模块。它通常用于加载特定的驱动程序或添加所需的内核模块，以便操作系统能够支持新的硬件设备或特定的功能。
+
+    - 开启包转发：
+         - 配置配置文件：
+            ```
+            cat > /etc/sysctl.d/docker.conf <<EOF
+            net.bridge.bridge-nf-call-ip6tables = 1
+            net.bridge.bridge-nf-call-iptables = 1
+            net.ipv4.ip_forward = 1
+            EOF
+            ```
+
+            `net.bridge.bridge-nf-call-ip6tables = 1`  
+            `net.bridge.bridge-nf-call-iptables = 1`  
+            可解决 WARNING: bridge-nf-call-iptables is disabled
+
+            `net.ipv4.ip_forward = 1`  
+            将Linux系统作为路由或者VPN服务就必须要开启IP转发功能。当linux主机有多个网卡时一个网卡收到的信息是否能够传递给其他的网卡 ，如果设置成1 的话 可以进行数据包转发，可以实现VxLAN 等功能。不开启会导致docker部署应用无法访问
+         - 加载并应用
+            ```
+            sysctl -p /etc/sysctl.d/docker.conf
+            ```
+            > sysctl：用于查看和修改内核运行时参数的工具。
+
+            >-p：表示 "load in sysctl settings from the file specified or /etc/sysctl.conf if none given"，即从指定的文件加载系统参数设置。
+
+         重启后模块失效，配置开机自动加载模块的脚本
+
+         - 创建文件 rc.sysinit
+            ```
+            cat /etc/rc.sysinit
+            ```
+            > 在 Linux 引导过程中，rc.sysinit 负责执行一些基本的系统初始化任务
+         - 写入循环加载逻辑
+            ```
+            #!/bin/bash
+            for file in /etc/sysconfig/modules/*.modules ; do
+            [ -x $file ] && $file
+            done
+            ```
+         - 创建文件 br_netfilter.modules
+            ```
+            cat /etc/sysconfig/modules/br_netfilter.modules
+            ```
+         - 写入内核模块加载命令
+            ```
+            modprobe br_netfilter
+            ```
+         - 增加权限
+           ```
+           chmod 755 /etc/sysconfig/modules/br_netfilter.modules
+           ```
+   ---
+8. 配置镜像加速  
+   - 配置镜像地址
+     ```
+     vi /etc/docker/daemon.json
+     ```
+     ```
+     "registry-mirrors":["https://y8y6vosv.mirror.aliyuncs.com","https://registry.docker-cn.com","https://docker.mirrors.ustc.edu.cn","https://dockerhub.azk8s.cn","http://hub-mirror.c.163.com"]
+     ```
+   - 使生效
+      ```
+      sudo systemctl daemon-reload
+      sudo systemctl restart docker
+      ```
+   阿里云镜像地址查看：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
+
+   ![图示](../_media/猎魔笔记/docker/镜像列表.png)
