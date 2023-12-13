@@ -1,3 +1,4 @@
+- .vscode
 - Centos_7
   * [nginx](Centos_7/nginx)
   * [postgresql](Centos_7/postgresql)
@@ -11,7 +12,7 @@
   * [ReactNative的安装使用与调试](猎魔手记/ReactNative的安装使用与调试)
   * [SQL必知必会-笔记](猎魔手记/SQL必知必会-笔记)
   * [WebRTC_视频播放谷歌浏览器兼容问题](猎魔手记/WebRTC_视频播放谷歌浏览器兼容问题)
-  * [docker](猎魔手记/docker)
+  * [docker速查](猎魔手记/docker速查)
   * [一个较为通用的简单_.csv_文件下载方法](猎魔手记/一个较为通用的简单_.csv_文件下载方法)
   * [从excel数据表尽快创建相同数据库表、导入数据、辅助web相应列表开发](猎魔手记/从excel数据表尽快创建相同数据库表、导入数据、辅助web相应列表开发)
   * [使用_IntersectionObserver_实现顺滑的无限滚动](猎魔手记/使用_IntersectionObserver_实现顺滑的无限滚动)

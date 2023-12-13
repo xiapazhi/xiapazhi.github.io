@@ -233,7 +233,7 @@
    ```
    docker run --name=hello -it centos /bin/bash
    ```
-   - --name：制定容器名称
+   - --name：指定容器名称
    - -i：交互式
    - -t：分配伪终端
    - /bin/bash：说明 shell 类型为 bash
@@ -289,3 +289,48 @@
       ```
       docker --help
       ```
+
+## Dockerfile
+
+```
+// 指定基础镜像 为 centos
+FROM centos
+
+
+// 作者
+MAINTAINER xxx
+
+
+// 指定当前镜像构建时运行的 linux 命令
+// Shell 模式
+RUN <command> 
+
+🌰 RUN echo hello_docker
+
+// exec 模式
+RUN ["指定 Shell","命令参数","命令"]
+
+// -c 指定后续是一条命令
+
+🌰 RUN ["/bin/shell","-c","echo hello_docker"]
+
+
+// 指定端口(一个或多个)
+EXPOSE 80 81 
+
+// 运行 docker run -P 时， 
+// -P 会将暴露的端口在物理机进行随机映射
+//使用 -p 进行容器端口映射指定： docker run -p 主机端口:容器端口 / docker run -p 容器端口
+
+// CMD 在镜像运行 (docker run) 时执行 , 可以用于运行时启动某些功能
+CMD ["","",""]
+CMD echo hello_docker
+
+// 多条 CMD 命令 仅最后一条会生效
+
+
+// ENTRYPOINT 类似 CMD 但是不会被 docker run 命令行参数指定的命令覆盖，而且这些命令会作为参数赋给 ENTRYPOINT 所指定的程序命令
+// 若 docker run 指定 --entrypoint ，则依然覆盖 ENTRYPOINT 命令
+ENTRYPOINT
+
+```
