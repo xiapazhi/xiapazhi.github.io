@@ -297,19 +297,19 @@
 
 ## Dockerfile
 
-1. FROM 基础镜像
+1. `FROM` 基础镜像
    ```
    FROM centos
    ```
    指定基础镜像 为 centos
 
-2. MAINTAINER 作者
+2. `MAINTAINER` 作者
    
    ```
    MAINTAINER xxx
    ```
 
-3. RUN 指定当前镜像构建时运行的 linux 命令
+3. `RUN` 指定当前镜像构建时运行的 linux 命令
 
    ```
    RUN <command> 
@@ -329,7 +329,7 @@
 
    - -c 指定后续是一条命令
 
-4. EXPOSE 指定端口（一个或多个）
+4. `EXPOSE` 指定端口（一个或多个）
    ```
    EXPOSE 80 81 
    ```
@@ -345,7 +345,7 @@
       docker run -p 容器端口      
       ```
 
-5. CMD 指定镜像运行时命令
+5. `CMD` 指定镜像运行时命令
    
    CMD 在镜像运行 (docker run) 时执行 , 可以用于运行时启动某些功能
    ```
@@ -356,7 +356,7 @@
    ```
    多条 CMD 命令 仅最后一条会生效
 
-6. ENTRYPOINT
+6. `ENTRYPOINT`
    
    ENTRYPOINT 类似 CMD 但是不会被 docker run 命令行参数指定的命令覆盖，而且这些命令会作为参数赋给 ENTRYPOINT 所指定的程序命令
    ```
@@ -379,7 +379,7 @@
 
    多条 ENTRYPOINT 命令，仅最后一条生效
 
-7. COPY 复制指定文件到目标路径
+7. `COPY` 复制指定文件到目标路径
 
    ```
    COPY [--chown=<user>:<group>] <源路径> <目标路径>
@@ -395,9 +395,31 @@
      ```
    - `<目标路径>`：不必事先建立，若不存在会自动创建
 
-8. ADD 自动解压压缩包内容并复制到指定路径下
+8. `ADD` 自动解压压缩包内容并复制到指定路径下
    
    类似 COPY
 
-9. VOLUME 卷
+9. `VOLUME` 卷 - 挂载持久数据
+   ```
+   VOLUMN ["/data"]
+   ``` 
 
+   在容器中创建 `/data` 目录并挂载于物理机下，相互同步  
+   默认挂载在 `docker/容器名/容器id/data` 下
+
+   - 指定挂载位置
+     ```
+     docker run --name volume_test -v /data:/指定目录 -d -P 镜像名:tag名称
+     ```
+   - 指定多个
+      ```
+      VOLUMN ["/data1","/data2"]
+      ```
+
+10. `WORKDIR` 指定工作目录  
+    
+    必须是提前创建好的
+    ```
+    WORKDIR /path/work
+    ```
+    则创建容器后进入后会默认进入 `/path/work`
