@@ -290,47 +290,114 @@
       docker --help
       ```
 
+   - 产看详细信息
+      ```
+      docker inspect 容器名称/id
+      ```
+
 ## Dockerfile
 
-```
-// 指定基础镜像 为 centos
-FROM centos
+1. FROM 基础镜像
+   ```
+   FROM centos
+   ```
+   指定基础镜像 为 centos
 
+2. MAINTAINER 作者
+   
+   ```
+   MAINTAINER xxx
+   ```
 
-// 作者
-MAINTAINER xxx
+3. RUN 指定当前镜像构建时运行的 linux 命令
 
+   ```
+   RUN <command> 
+   ```
 
-// 指定当前镜像构建时运行的 linux 命令
-// Shell 模式
-RUN <command> 
+   🌰 Shell 模式
+   ```
+   RUN echo hello_docker
+   ```
 
-🌰 RUN echo hello_docker
+   🌰 exec 模式
+   ```
+   RUN ["指定 Shell","命令参数","命令"]
 
-// exec 模式
-RUN ["指定 Shell","命令参数","命令"]
+   RUN ["/bin/shell","-c","echo hello_docker"]
+   ```
 
-// -c 指定后续是一条命令
+   - -c 指定后续是一条命令
 
-🌰 RUN ["/bin/shell","-c","echo hello_docker"]
+4. EXPOSE 指定端口（一个或多个）
+   ```
+   EXPOSE 80 81 
+   ```
 
+   - -P 将暴露的端口在物理机进行随机映射
+      ```
+      docker run -P
+      ```
+   - -p 进行容器端口映射指定
+      ```
+      docker run -p 主机端口:容器端口
 
-// 指定端口(一个或多个)
-EXPOSE 80 81 
+      docker run -p 容器端口      
+      ```
 
-// 运行 docker run -P 时， 
-// -P 会将暴露的端口在物理机进行随机映射
-//使用 -p 进行容器端口映射指定： docker run -p 主机端口:容器端口 / docker run -p 容器端口
+5. CMD 指定镜像运行时命令
+   
+   CMD 在镜像运行 (docker run) 时执行 , 可以用于运行时启动某些功能
+   ```
+   CMD ["","",""]
+   ```
+   ```
+   CMD echo hello_docker
+   ```
+   多条 CMD 命令 仅最后一条会生效
 
-// CMD 在镜像运行 (docker run) 时执行 , 可以用于运行时启动某些功能
-CMD ["","",""]
-CMD echo hello_docker
+6. ENTRYPOINT
+   
+   ENTRYPOINT 类似 CMD 但是不会被 docker run 命令行参数指定的命令覆盖，而且这些命令会作为参数赋给 ENTRYPOINT 所指定的程序命令
+   ```
+   FROM nginx
+   ENTERYPOINT ["nginx","-c"] # 定参
+   CMD ["/etc/nginx/nginx.conf"] # 变参
+   ```
 
-// 多条 CMD 命令 仅最后一条会生效
+   - 运行时传递变参
+      ```
+      docker run --name a_container_name:customer_tag /etc/nginx/other.conf
+      ```
 
+   若 docker run 指定 --entrypoint ，则依然覆盖 ENTRYPOINT 命令
+   ```
+   ENTRYPOINT ["","",""]
 
-// ENTRYPOINT 类似 CMD 但是不会被 docker run 命令行参数指定的命令覆盖，而且这些命令会作为参数赋给 ENTRYPOINT 所指定的程序命令
-// 若 docker run 指定 --entrypoint ，则依然覆盖 ENTRYPOINT 命令
-ENTRYPOINT
+   ENTRYPOINT echo hello_docker
+   ```
 
-```
+   多条 ENTRYPOINT 命令，仅最后一条生效
+
+7. COPY 复制指定文件到目标路径
+
+   ```
+   COPY [--chown=<user>:<group>] <源路径> <目标路径>
+   ```
+   - `[--chown=<user>:<group>]` ：可选参数，改变复制到容器内的文件的拥有者和属组
+   - `<源路径>`：可使用满足 GO 的 filepath.Match 规则的通配符
+   
+     ```
+     COPY hom* /dir/
+     ```
+     ```
+     COPY hom?.txt /dir/
+     ```
+   - `<目标路径>`：不必事先建立，若不存在会自动创建
+
+8. ADD 自动解压压缩包内容并复制到指定路径下
+   
+   类似 COPY
+
+9. VOLUME 卷
+
