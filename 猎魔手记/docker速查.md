@@ -297,6 +297,10 @@
 
 ## Dockerfile
 
+>[参考：51CTO](https://blog.51cto.com/u_16099335/7334441)
+
+---
+
 1. `FROM` 基础镜像
    ```
    FROM centos
@@ -409,7 +413,7 @@
 
    - 指定挂载位置
      ```
-     docker run --name volume_test -v /data:/指定目录 -d -P 镜像名:tag名称
+     docker run --name volume_test -v /data:/指定的物理机目录 -d -P 镜像名:tag名称
      ```
    - 指定多个
       ```
@@ -423,3 +427,61 @@
     WORKDIR /path/work
     ```
     则创建容器后进入后会默认进入 `/path/work`
+
+    >通过WORKDIR设置工作目录后，Dockerfile中其后的命令RUN、CMD、ENTRYPOINT、ADD、COPY等命令都会在该目录下执行。在使用docker run运行容器时，可以通过-w参数覆盖构建时所设置的工作目录。
+
+11. `ENV` 设置环境变量  
+    ```
+    ENV <key> <value>
+
+    ENV <key>=<value>
+    ```
+    设置的环境变量，可以在后续命令中以 $key 引用；
+    ```
+    ENV NODE_VERSION=12.22.2
+
+    RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz"
+    ```
+
+12. `USER` 指定执行后续命令的用户和用户组
+    
+    用户和用户组必须已经存在；
+
+    ```
+    USER <用户名>[:<用户组>]
+    ```
+    ```
+    USER user
+    USER uid
+    USER user:group
+    ```
+
+13. `ONBUILD` 
+    
+    创建第一个镜像的 dockerfile_onbuild
+    ```
+    ···
+    ONBUILD COPY A.html /B/
+    ONBUILD echo hello_docker
+    ···
+    ```
+    构建第一个镜像
+    ```
+    docker build -t="onbuild-test:v1" -f dockerfile_onbuild . --load
+    ```
+
+    ---
+    
+    创建应用第一个镜像的 dockerfile_useonbuild
+    ```
+    FROM onbuild:v1
+    ···
+    ```
+
+    在构建第二个镜像的时候
+    ```
+    docker build -t="onbuild-test:v2" -f dockerfile_useonbuild . --load
+    ```
+    > 会默认从 dockerhub 查找基础镜像 - 【未解】
+    
+    此时会执行 dockerfile_onbuild 中的命令
