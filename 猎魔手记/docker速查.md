@@ -294,6 +294,46 @@
       ```
       docker inspect 容器名称/id
       ```
+   ---
+   - 构建镜像
+
+      ```
+      docker build -t="镜像名:版本号" -f 指定的Dockerfile路径 .
+      ```
+   - 查看本地所有镜像
+      ```
+      docker images
+      ```
+      - 过滤
+      ```
+      docker images | grep xxx
+      ```
+   - 重命名镜像
+      ```
+      docker tag 旧镜像名:旧版本号 新镜像名:新版本号
+      ```
+
+   - 删除镜像
+      ```
+      docker rmi 镜像名:版本号
+      ```
+   ---
+   - 运行镜像 / 基于镜像创建容器
+      ```
+      docker run -d -p 80 --name 创建的容器名 镜像名:版本号
+      ```
+   - 查看容器日志
+      ```
+      docker logs 容器名
+      ```
+      ```
+      docker logs -f -t --since=20m --tail=10 容器名
+      ```
+      - -f 实时查看
+      - -t 显示时间戳
+      - --since 显示指定时间之后的日志
+      - --tail 显示最新N条日志
+
 
 ## Dockerfile
 
@@ -344,10 +384,12 @@
       ```
    - -p 进行容器端口映射指定
       ```
-      docker run -p 主机端口:容器端口
-
-      docker run -p 容器端口      
+      docker run -p 主机端口:容器端口      
       ```
+      ```
+      docker run -p 容器端口
+      ```
+      不指定主机端口则会随机进行映射
 
 5. `CMD` 指定镜像运行时命令
    
@@ -485,3 +527,12 @@
     > 会默认从 dockerhub 查找基础镜像 - 【未解】
     
     此时会执行 dockerfile_onbuild 中的命令
+
+---
+
+### 构建镜像
+
+```
+docker build -t="镜像名:版本号" -f 指定的Dockerfile路径 .
+```
+最后的 `.` 代表构建的是当前目录
