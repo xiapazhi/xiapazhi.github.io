@@ -228,32 +228,6 @@
    docker rmi -f centos:latest
    ```
 
-## 容器操作
-### 1. 以交互式方式启动并进入容器
-   ```
-   docker run --name=hello -it centos /bin/bash
-   ```
-   - --name：指定容器名称
-   - -i：交互式
-   - -t：分配伪终端
-   - /bin/bash：说明 shell 类型为 bash
-
-### 2. 以守护进程方式启动容器
-   ```
-   docker run --name=hello1 -td centos
-   ```
-   - -d：在后台运行
-
-   产看正在运行的容器
-   ```
-   docker ps
-   ```
-   
-   进入容器
-   ```
-   docker exec -it hello1 /bin/bash
-   ```
-
 ### 3. 常用命令
    - 查看正在运行的容器
       ```
@@ -312,11 +286,13 @@
       ```
       docker tag 旧镜像名:旧版本号 新镜像名:新版本号
       ```
+      实际上是为该镜像添加一个新标签，此时新旧标签共存
 
    - 删除镜像
       ```
       docker rmi 镜像名:版本号
       ```
+      实际上就是删除标签，当删除最后一个标签的时候，镜像即被删除
    ---
    - 运行镜像 / 基于镜像创建容器
       ```
@@ -334,6 +310,46 @@
       - --since 显示指定时间之后的日志
       - --tail 显示最新N条日志
 
+   - 进入容器
+      - 以交互式方式启动并进入容器
+         ```
+         docker run --name=hello -it centos /bin/bash
+         ```
+         - --name：指定容器名称
+         - -i：交互式
+         - -t：分配伪终端
+         - /bin/bash：说明 shell 类型为 bash
+           
+      - 以守护进程方式启动容器
+         ```
+         docker run --name=hello1 -td centos
+         ```
+         - -d：在后台运行
+
+         产看正在运行的容器
+         ```
+         docker ps
+         ```
+         
+         进入容器
+         ```
+         docker exec -it hello1 /bin/bash
+         ```
+
+      - 或
+        ```
+        docker attach <容器ID或名称>
+        ```
+
+      ---
+
+      某些轻量级基础镜像不包含 bash，而只包含sh
+      ```
+      docker exec -it <容器ID或名称> /bin/sh
+      ```
+
+
+      
 
 ## Dockerfile
 
@@ -446,23 +462,93 @@
    类似 COPY
 
 9. `VOLUME` 卷 - 挂载持久数据
-   ```
-   VOLUMN ["/data"]
-   ``` 
 
-   在容器中创建 `/data` 目录并挂载于物理机下，相互同步  
-   默认挂载在 `docker/容器名/容器id/data` 下
+   数据卷是经过特殊设计的目录，可以绕过联合文件系统（UFS），为一个或者多个容器提供访问，数据卷设计的目的，在于数据的永久存储，它完全独立于容器的生存周期，因此，docker 不会在容器删除时删除其挂载的数据卷，也不会存在类似的垃圾收集机制，对容器引用的数据卷进行处理，同一个数据卷可以只支持多个容器的访问。
+
+   - 特点：
+
+      1. 数据卷在容器启动时初始化，如果容器使用的镜像在挂载点包含了数据，这些数据会被拷贝到新初始
+      化的数据卷中
+      2. 数据卷可以在容器之间共享和重用
+      3. 可以对数据卷里的内容直接进行修改
+      4. 数据卷的变化不会影像镜像的更新
+      5. 卷会一直存在，即使挂载数据卷的容器已经被删除
+
+   - 语法
+      ```
+      VOLUMN ["/data"]
+      ``` 
+
+      在容器中创建 `/data` 目录并挂载于物理机下，相互同步  
+      默认挂载在 `docker/容器名/容器id/data` 下
 
    - 指定挂载位置
      ```
-     docker run --name volume_test -v /data:/指定的物理机目录 -d -P 镜像名:tag名称
+     docker run --name volume_test -v /指定的物理机目录:/data -d -P 镜像名:tag名称
      ```
+     指定的物理机目录 会自动创建
+
+     ```
+     docker run --name volume_test -v ~/指定的物理机目录:/data -d -P 镜像名:tag名称
+     ```
+
+     - ~ 代表当前用户的家目录：`/root`
+         
    - 指定多个
       ```
       VOLUMN ["/data1","/data2"]
       ```
 
-10. `WORKDIR` 指定工作目录  
+   - 为数据卷添加访问权限
+     ```
+     docker run --name volume_test -v /指定的物理机目录:/data:ro -d -P 镜像名:tag名称
+     ```
+     - ro : 只读
+     - 添加只读权限之后在 docker 容器的 /data 目录下不再能创建文件
+     - 宿主机下的 /指定的物理机目录 下可创建内容
+
+   ---
+   ---
+
+   - 数据卷容器
+      > 命名的容器挂载数据卷，其他容器通过挂载这个容器实现数据共享，挂载数据卷的容器，就叫做数据卷容器
+
+      - 挂载(应用)数据卷容器
+        ```
+        docker run --volumes-from [container name]
+        ```
+
+   - 卷的备份和还原
+     - 备份
+       ```
+       docker run --volumes-from 包含要备份的镜像的容器名 -v /指定的宿主机保存路径:/容器内保存备份路径 --name 要运行的容器名称 镜像名 tar zcvf /容器内保存备份路径/备份文件名.tar.gz /容器内数据卷路径
+       ```
+
+       - 镜像名：当前容器运行的基础镜像
+         - centos ：可以，但是忒大了
+         - alpine ：可以，不大
+       - tar zcvf ：压缩命令
+         - c：创建新的归档文件。
+         - z：使用 gzip 压缩归档文件。
+         - v：显示详细的输出信息，以便查看归档或解压的过程。
+         - f：指定归档文件的名称。
+  
+     - 还原
+       ```
+       docker run --volumes-from 包含要还原的镜像的容器名 -v /指定的宿主机保存路径:/容器内保存备份路径 --name 要运行的容器名称 镜像名 tar xzvf /容器内保存备份路径/备份文件名.tar.gz -C /容器内数据卷路径
+       ```
+       - tar xzvf ：解压缩命令
+         - x：提取归档文件中的内容。
+         - z：使用 gzip 解压缩归档文件。
+         - v：显示详细的输出信息，以便查看解压的过程。
+         - f：指定要解压的归档文件的名称。
+     
+     ---
+      直接压缩挂载文件多方便 ...
+
+   ---
+
+10.   `WORKDIR` 指定工作目录  
     
     必须是提前创建好的
     ```
@@ -472,7 +558,7 @@
 
     >通过WORKDIR设置工作目录后，Dockerfile中其后的命令RUN、CMD、ENTRYPOINT、ADD、COPY等命令都会在该目录下执行。在使用docker run运行容器时，可以通过-w参数覆盖构建时所设置的工作目录。
 
-11. `ENV` 设置环境变量  
+11.   `ENV` 设置环境变量  
     ```
     ENV <key> <value>
 
@@ -485,7 +571,7 @@
     RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz"
     ```
 
-12. `USER` 指定执行后续命令的用户和用户组
+12.   `USER` 指定执行后续命令的用户和用户组
     
     用户和用户组必须已经存在；
 
@@ -498,7 +584,7 @@
     USER user:group
     ```
 
-13. `ONBUILD` 
+13.   `ONBUILD` 
     
     创建第一个镜像的 dockerfile_onbuild
     ```
@@ -530,9 +616,151 @@
 
 ---
 
-### 构建镜像
+## 构建镜像
 
 ```
 docker build -t="镜像名:版本号" -f 指定的Dockerfile路径 .
 ```
 最后的 `.` 代表构建的是当前目录
+
+## 容器互联
+
+### docker 容器的网络基础知识
+   1. docker0
+   
+      安装docker的时候，会生成一个docker0的虚拟网桥
+
+      可以使用 `ip addr` 查看
+
+      ```
+      ...
+      docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+         link/ether 02:42:28:ae:c0:42 brd ff:ff:ff:ff:ff:ff
+         inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+            valid_lft forever preferred_lft forever
+         inet6 fe80::42:28ff:feae:c042/64 scope link
+      ...
+      ```
+   
+   2. Linux 虚拟网桥的特点
+
+      - 可以设置ip地址
+      - 相当于拥有一个隐藏的虚拟网卡
+      - 每运行一个 docker 容器都会生成一个 veth 设备对，这个 veth 一个接口在容器里，一个接口在物理机上。
+
+   3. 网桥管理工具
+      ```
+      yum install bridge-utils -y
+      ```
+      - 查看网桥信息
+         ```
+         brctl show
+         ```
+## 网络模式 --net
+   
+   docker run 创建 Docker 容器时，可以用 `--net` 选项指定容器的网络模式 
+   - bridge 模式：--net=bridge  默认设置
+     
+     容器启动后会通过DHCP获取一个地址
+
+   - host 模式：--net=host
+     
+     共享宿主机的网络
+
+     - 容器与宿主机共享一个网络栈，容器中的应用可以直接使用宿主机的网络设备，比如：ping 宿主机，或者安装网络管理工具，比如：ifconfig，ip等。
+
+   - none 模式：--net=none
+     
+      创建的容器没有网络地址，只有lo网卡
+
+      可以使用 `ip addr` 查看
+      ```
+      1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+         link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+         inet 127.0.0.1/8 scope host lo
+            valid_lft forever preferred_lft forever
+      ```
+
+   - container 模式：--net=container:NAME or ID
+     
+     创建新容器的时候，通过--net container参数，指定其和已经存在的某个容器共享一个 Network Namespace。
+
+     ```bash
+     docker run -itd --net=container:预共享的容器名称或id centos /bin/bash
+     ```
+
+     ![net=container](../_media/猎魔笔记/docker/net=container.png)
+
+   ---
+
+   ```
+   privileged=true 
+   ```
+  
+   > 在 Docker 中，`privileged=true` 表示以特权模式运行容器。这意味着容器内的进程将拥有与宿主机几乎相同的权限，可以访问和操作宿主机上的设备、文件等资源。
+  
+
+## 资源配额
+
+- 显示系统中各个进程的资源占用状况的命令
+   ```
+   top
+   ```
+
+   按 `1` 可以展开 CPU 核心使用情况
+
+   ![top_cpu](../_media/猎魔笔记/docker/top_cpu.png)
+
+- 查看 docker 资源使用情况的命令
+   ```
+   docker system df
+   ```
+
+---
+
+- CPU
+  - 限制 CPU 使用权重
+     ```
+     docker run --cpu-shares=1024 ubuntu /bin/sh
+     ```
+    - --cpu-shares : 默认值 1024
+     > 某个容器最终能分配到的 CPU 资源取决于它的 cpu share 占所有容器 cpu share 总和的比例
+
+     > 通过 cpu share 可以设置容器使用 CPU 的优先级
+
+     > 这种按权重分配 CPU 只会发生在 CPU 资源紧张的情况下
+
+     > 只发生在容器竞争同一个 CPU 的时间片时有效
+
+   - CPU 核心控制
+      指定运行的 CPU 核心
+
+      ```
+      docker run -itd --cpuset-cpus 0,1 ubuntu:14.04 /bin/bash
+      ```
+
+- 内存
+   ```
+   docker run -itd --memory 100m ubuntu:14.04 /bin/bash
+   ```
+    `-m` / `--memory`
+    
+    单位：`b`, `k`, `m`, `g`
+
+- IO (读写速度)
+   - 写入速度
+     - --device-write-bps
+         ```
+         docker run -it  -v /主机卷:/容器卷 --device /主机设备:/容器设备 --device-write-bps /目标写入:2mb centos  /bin/bash
+         ```
+   - 读取速度
+     - --device-read-bps
+
+   - 单位：`kb`、`mb` 或 `gb`
+
+- 自动释放容器资源
+  ```
+  docker run --rm -it centos /bin/bash
+  ```
+  
+  容器退出后自动删除容器
