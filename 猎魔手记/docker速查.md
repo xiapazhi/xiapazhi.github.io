@@ -228,7 +228,12 @@
    docker rmi -f centos:latest
    ```
 
-### 3. 常用命令
+### 7. 常用命令
+   - 查看服务状态
+      ```
+      systemctl status docker
+      ```
+
    - 查看正在运行的容器
       ```
       docker ps
