@@ -51,7 +51,7 @@
       ```
       修改为
       ```
-      #SELINUX=enforcing
+      # SELINUX=enforcing
       SELINUX=disabled
       ```
       重启
