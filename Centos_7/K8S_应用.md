@@ -79,7 +79,10 @@
          env: dev
    spec:                   # 规格说明（specification 的简称）
       # activeDeadlineSeconds: 600        # Pod 运行的最长时间
-
+      restartPolicy: Always               # Pod 重启策略  
+                                             # Always 重启
+                                             # Never 不重启
+                                             # OnFailure 只有容器退出码非 0 时才重启
 
    
       # --------- Node 节点选择 BEGAIN ---------
@@ -167,7 +170,23 @@
             
       # --------- Pod 节点亲和性 END ---------
 
+      # --------- 初始化容器 BEGAIN ---------
 
+      initContainers:                     # 初始化容器列表
+                                          # 容器的顺序是从上到下顺序执行 有一个失败则 Pod 失败
+      - name: initcontainer1
+        image: busybox:1.28
+        imagePullPolicy: IfNotPresent   
+        command: ["sh", "-c", "sleep 3600"]
+      - name: initcontainer2
+         ...
+         command:
+         - wget
+         - "-O"
+         - "/index.html"
+         - "https://www.baidu.com"
+
+      # --------- 初始化容器 END ---------
 
       containers:                         # 容器列表
       - name: gogogo                      # 容器的名字
@@ -180,6 +199,15 @@
                                              # Always：不管本地是否存在镜像，都要重新拉取镜像
                                              # Never： 从不拉取镜像
                                              # IfNotPresent：如果本地存在，使用本地的镜像，本地不存在，从官方拉取镜像
+         lifecycle：                      # 容器生命周期钩子
+            postStart:                       # 容器创建之后立刻执行，用于资源部署、环境准备等。
+              exec:
+                command: ["echo", "postStart"]
+
+            preStop:                         # 容器销毁之前执行，用于资源回收、清理等。
+              exec:  
+                command: ["echo", "preStop"]
+
       # 写第二个镜像
       - name: busybox
         image: busybox:1.28
@@ -239,6 +267,8 @@
             kubectl get pod -L release,app
             ```
             ![](../_media/Centos_7/K8S_应用/ll-label.png)
+
+      - -w ：实时更新 ( --watch )
 
       K8S 集群环境内，可以通过 
       ```
@@ -520,3 +550,145 @@ kubectl apply -f namespace-quota.yaml
   ```
   kubectl describe pod pod-resourcequota-test -n test-namespace | grep Tolerations
   ```
+
+# 生命周期
+
+![](../_media/Centos_7/K8S_应用/lifecycle.png)
+
+### pod 在整个生命周期的过程中总会处于以下几个状态：
+
+- Pending：创建了pod资源并存入etcd中，但尚未完成调度。
+
+- ContainerCreating：Pod 的调度完成，被分配到指定 Node 上。处于容器创建的过程中。通常是在拉取镜像的过程中。
+
+- Running：Pod 包含的所有容器都已经成功创建，并且成功运行起来。
+
+- Succeeded：Pod中的所有容器都已经成功终止并且不会被重启
+
+- Failed：所有容器都已经终止，但至少有一个容器终止失败，也就是说容器返回了非0值的退出状态或已经被系统终止。
+
+- Unknown：因为某些原因无法取得 Pod 的状态。这种情况通常是因为与 Pod 所在主机通信失败。
+
+
+### pod 生命周期的重要行为
+
+1. 在启动任何容器之前，先创建 pause 基础容器，它初始化Pod的环境并为后续加⼊的容器提供共享的名称空间。
+
+2. 初始化容器（initcontainer）：
+   
+   一个pod可以拥有任意数量的init容器。init容器是按照顺序以此执行的，并且仅当最后一个init容器执行完毕才会去启动主容器。
+
+3. 生命周期钩子：
+
+   pod 允许定义两种类型的生命周期钩子，启动后(`postStart`)钩子和停止前(`preStop`)钩子
+
+   这些生命周期钩子是基于每个容器来指定的，和 init 容器不同的是，init 容器是应用到整个 pod。而这些钩子是针对容器的，是在容器启动后和停止前执行的。
+
+4. 容器探测：
+
+   #### 对 Pod 健康状态诊断。分为三种：
+
+      - Startupprobe (启动探测)：探测容器是否正常运行
+      - Livenessprobe (存活性探测)：判断容器是否处于runnning状态，根据重启策略决定是否重启容器
+      - Readinessprobe (就绪性检测)：判断容器是否准备就绪并对外提供服务，将容器设置为不可用，不接受service转发的请求
+
+      书写位置
+
+      ```
+      apiVersion: v1
+      kind: Pod
+      spec:
+         containers:
+         - name: tomcat
+           livenessProbe:     # 这儿
+               ...
+      ```
+
+      ---
+
+   #### 三种探针用于Pod检测：
+
+      - ExecAction：在容器中执行一个命令，并根据返回的状态码进行诊断，只有返回0为成功
+
+      - TCPSocketAction：通过与容器的某TCP端口尝试建立连接
+
+      - HTTPGetAction：通过向容器IP地址的某指定端口的 path 发起 HTTP GET 请求。
+
+      有一个探针探测失败则会根据重启策略进行重启，没有写明的探测则默认为成功
+
+      --- 
+
+   #### LivenessProbe和ReadinessProbe、startupprobe探测都支持下面三种探针：
+
+      1. `exec`：在容器中执行指定的命令，如果执行成功，退出码为 0 则探测成功。
+         ```
+         xxxProbe:
+            exec:
+               command:
+               - "/bin/sh"
+               - "-c"
+               - "aa ps aux | grep tomcat"
+         ```
+      2. `TCPSocket`：通过容器的 IP 地址和端口号执行 TCP 检 查，如果能够建立 TCP 连接，则表明容器健康。
+         ```
+         xxxProbe:
+            tcpSocket:
+               port: 80
+         ```
+      3. `HTTPGet`：通过容器的IP地址、端口号及路径调用 HTTP Get方法，如果响应的状态码大于等于200且小于400，则认为容器健康
+         ```
+            xxxProbe:
+               httpGet:
+                  scheme: HTTP
+                  port: 80
+                  path: /
+
+               # 相当于访问 localhost:80/
+         ```
+
+
+   #### 探针探测结果有以下值：
+
+      1. Success：表示通过检测。
+      2. Failure：表示未通过检测。
+      3. Unknown：表示检测没有正常进行。
+
+      ---
+      
+   #### 探针相关的属性
+
+      - `initialDelaySeconds`：容器启动后要等待多少秒后探针开始工作，单位“秒”，默认是 0 秒，最小值是 0 
+      - `periodSeconds`： 执行探测的时间间隔（单位是秒），默认为 10s，单位“秒”，最小值是1
+      - `timeoutSeconds`： 探针执行检测请求后，等待响应的超时时间，默认为1，单位“秒”。
+      - `successThreshold`：连续探测几次成功，才认为探测成功，默认为 1
+        - 在 Liveness 探针中必须为1
+        - 最小值为1。
+      - failureThreshold： 探测失败的重试次数，重试一定次数后将认为失败，
+        - 在 readiness 探针中，Pod 会被标记为未就绪
+        - 默认为 3，最小值为 1
+   ---
+
+   ReadinessProbe 和 livenessProbe 可以使用相同探测方式，只是对 Pod 的处置方式不同：
+readinessProbe 当检测失败后，将 Pod 的 IP:Port 从对应的 EndPoint 列表中删除。
+livenessProbe 当检测失败后，将杀死容器并根据 Pod 的重启策略来决定作出对应的措施。
+
+### pod 的终止过程
+
+1. 用户发出删除 pod 命令：`kubectl delete pods` / `kubectl delete -f yaml`
+
+2. Pod 对象随着时间的推移更新，在宽限期（默认情况下30秒），pod 被视为“dead”状态
+
+3. 将 pod 标记为“Terminating”状态
+
+   同步的方式启动执行 preStop 钩子处理程序；若宽限期结束后，preStop 仍未执行结束，第二步会重新执行并额外获得一个2秒的小宽限期
+
+   监控到 pod 对象为“Terminating”状态的同时启动 pod 关闭过程
+
+
+4. endpoints 控制器监控到 pod 对象关闭，将 pod 与 service 匹配的 endpoints 列表中删除
+
+5. Pod 内对象的容器收到 TERM 信号
+
+6. 宽限期结束之后，若存在任何一个运行的进程，pod 会收到 SIGKILL 信号
+
+7. Kubelet 请求 API Server 将此 Pod 资源宽限期设置为 0 从而完成删除操作
