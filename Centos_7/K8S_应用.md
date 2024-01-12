@@ -67,7 +67,7 @@
             imagePullPolicy: IfNotPresent    # 镜像拉取策略
    ```
   
-  呼啦啦属性全写的镜像
+   呼啦啦属性全写的镜像
    ```
    apiVersion: v1          # api 版本
    kind: Pod               # 创建的资源
@@ -311,6 +311,21 @@
      kubectl get pods --show-labels
      ```
 
+   - 查看 Pod 完整自动填充完整的 yaml
+     ```
+     kubectl get pods -o yaml
+
+     kubectl get pods [podName] -o yaml
+     ```
+
+       - 筛查  <a id="pod_uid"></a>
+         ```
+         kubectl get pods -o yaml | grep uid
+
+         kubectl get pods [podName] -o yaml | grep uid
+         ```
+         ![](../_media/Centos_7/K8S_应用/pod-uid.png)
+
    - 删除 Pod
       ```
       kubectl delete pods go-test
@@ -336,44 +351,145 @@
 
   > 常见的管理Pod的控制器：Replicaset、Deployment、Job、CronJob、Daemonset、Statefulset。
 
-   举个栗子：通过 Deployment 管理Pod
+  - #### Replicaset
 
-   ```
-   vim pod-try-go-controller.yaml
-   ```
-   ```
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-      name: go-controller-test
-      namespace: default
-      labels:
-         app: go
-   spec:
-      selector:
-      matchLabels:
-         app: app-go
-      replicas: 2
-      template:
+      > 通过 Replicaset 管理 Pod
+
+      查看 Replicaset 释义 可以简写为
+      ```
+      kubectl explain rs
+      ```
+
+      ```
+      apiVersion: apps/v1
+      kind: ReplicaSet
       metadata:
+         name: go-test           # 定义的名称 将决定拉起的容器名称
+         namespace: default
          labels:
-            app: app-go
+            app: go
+            tier: frontend
       spec:
-         containers:
-         - name: go-con
-            ports:
-            - containerPort: 8080
-            image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
-            imagePullPolicy: IfNotPresent
-   ```
+         replicas: 3             # 副本数
+         selector:
+         matchLabels:
+            tier1: frontend1
+         template:                  # 定义 Pod 的模板
+            metadata:               # 容器的元数据
+                                    # 没有必要写 name 因为 pod 的名字会根据 ReplicaSet-metadata-name 自动生成
+               labels:              # 容器的标签   
+                  tier1: frontend1  # 容器的标签值 和 matchLabels 的值要一致才能被影响
+            spec:
+               containers:
+               - name: go-con
+                  ports:
+                  - containerPort: 8080
+                  image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+                  imagePullPolicy: IfNotPresent
+      ``` 
 
-   - 查看 Deployment
-      ```
-      kubectl get deployment
-      ```
-      ![](../_media/Centos_7/K8S_应用/deploy.png)
+      动态扩缩容：只需要更改 Replicaset 的 replicas 副本数后重新 apply 即可；
+      更改镜像：需要更改文件且重新 apply 后还要手动删除 Pod，等待 Replicaset 重新建立新副本才生效；
 
-   其余命令与自主式 Pod 相同。
+      - 查看 Replicaset
+         ```
+         kubectl get replicaset
+
+         kubectl get rs
+         ```
+  - #### Deployment
+
+      > 通过 Deployment 管理 Pod
+
+      > 建立在 Replicaset 之上，提供更高级的功能，例如滚动更新、回滚、扩缩容等。
+
+      > 声明式定义，通过修改 yaml 文件并重新 apply 即可生效
+
+      > 可以管理多个rs，每次更新镜像版本，都会生成一个新的rs，把旧的rs替换掉，多个rs同时存在，但是只有一个rs运行。
+      ![](../_media/Centos_7/K8S_应用/deployment.png)
+
+      查看 Replicaset 释义 可以简写为
+      ```
+      kubectl explain deployment
+
+      kubectl explain deploy
+      ```
+
+      ```
+      vim try-go-deploy.yaml
+      ```
+      ```
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+         name: go-deploy-test
+         namespace: default                     # 定义的 deployment 名称 将决定拉起的容器名称
+         labels:
+            app: go
+      spec:
+         minReadySeconds: 0                     # 指定最小的 ready 时间
+         paused: false                          # 是否暂停 为 true 则更新的时候创建 pod 后就暂停，不会继续进行下一步的替换操作
+         progressDeadlineSeconds: 600           # 最大的 ready 时间，超过直接失败，paused 为 true 时，progressDeadlineSeconds 无效
+         revisionHistoryLimit: 10               # 保留的历史版本数
+
+         strategy:                              # 更新策略
+            type: RollingUpdate                 # 更新策略类型 
+                                                   # RollingUpdate 默认值，滚动更新
+                                                   # Recreate 重建更新
+            rollingUpdate:                      # 滚动更新策略
+               maxSurge: 25%                    # 更新时最大的允许超出的指定的目标副本数的数量或比例 得数向上取整；据说设为 1 较好
+               maxUnavailable: 25%               # 更新时最大的允许的未就绪的指定目标副本数的数量或比例 得数向下取整；据说设为 0 最好
+
+         selector:                              # 标签选择器
+            matchLabels:                        # 标签选择器 matchLabels 下定义的标签需要跟 template.metadata.labels 定义的标签一致
+               app: app-go
+         replicas: 3                            # 副本数
+         template:                              # 定义 Pod 的模板
+            metadata:
+               labels:
+                  app: app-go
+            spec:
+               containers:
+               - name: go-con
+                  ports:
+                  - containerPort: 8080
+                  image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+                  imagePullPolicy: IfNotPresent
+      ```
+
+      - 创建 Deployment
+         ```
+         kubectl create -f try-go-deploy.yaml
+         ```
+         声明式的定义，既可以创建资源，也可以动态更新资源
+
+      - 查看 Deployment
+         ```
+         kubectl get deployment
+
+         kubectl get deploy
+         ```
+         ![](../_media/Centos_7/K8S_应用/deploy.png)
+
+         1. NAME：列出名称空间中 deployment 的名称。
+         2. READY：显示 deployment 有多少副本数。它遵循 ready/desired 的模式。
+         3. UP-TO-DATE： 显示已更新到所需状态的副本数。
+         4. AVAILABLE： 显示你的可以使用多少个应用程序副本。
+         5. AGE ：显示应用程序已运行的时间。
+      
+      - 查看 deploy 创建的 replicaset
+         ```
+         kubectl get rs
+         ```
+         ReplicaSet的名称始终设置为 `[DEPLOYMENT-NAME]-[RANDOM-STRING]`
+
+      - 命令行修改更新策略
+        ```
+        kubectl patch deployment go-deploy-test -p '{"spec":{"strategy":{"rollingUpdate": {"maxSurge":1,"maxUnavailable":1}}}}'
+        ```
+      ---
+      其余命令与自主式 Pod 相同。
+
 
 - 通过命令行创建 Pod
   > 通过 `kubectl run` 创建 Pod
@@ -692,3 +808,503 @@ livenessProbe 当检测失败后，将杀死容器并根据 Pod 的重启策略�
 6. 宽限期结束之后，若存在任何一个运行的进程，pod 会收到 SIGKILL 信号
 
 7. Kubelet 请求 API Server 将此 Pod 资源宽限期设置为 0 从而完成删除操作
+
+
+## Service 代理
+> 四层代理 / 支持的是 TCP\UDP\SCTP 协议
+
+> 在 kubernetes 中，Pod 是有生命周期的，且 pod ip在 k8s 集群之外无法访问的，如果 Pod 重启它的 IP 也很有可能会发生变化。如果我们的服务都是将 Pod 的 IP 地址写死，Pod 挂掉或者重启，和刚才重启的 pod 相关联的其他服务将会找不到它所关联的Pod，为了解决这个问题，在 kubernetes 中定义了 service 资源对象，Service 定义了一个服务访问的入口，客户端通过这个入口即可访问服务背后的应用集群实例，service 是一组Pod的逻辑集合，这一组 Pod 能够被 Service 访问到，通常是通过 Label Selector 实现的。
+> 
+> ![](../_media/Centos_7/K8S_应用/Service.png)
+>
+> Pod 就绪后才会被加入 Service
+
+### ClusterIP 类型
+
+> 为 Service 分配一个集群内部的IP地址，用于对后端Pod进行负载均衡。
+
+```
+vim try_service_ci.yaml
+```
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: try-service-ci
+   labels:
+      app: try-service
+spec:
+   type: ClusterIP
+   ports:
+   - port: 80                    # service 的端口，暴露给 k8s 集群内部服务访问
+      protocol: TCP              # 协议
+      targetPort: 80             # 指定代理的容器中定义的端口，容器可能有多个端口
+   selector:
+      app: go                    # 指定代理拥有 app: go 标签的 Pod
+```
+
+- 查看 service 
+   ```
+   kubectl get svc
+
+   kubectl get svc try-service-ci
+
+   kubectl get svc -l app=try-service
+
+   kubectl get services --all-namespaces
+   ```
+
+   ![](../_media/Centos_7/K8S_应用/service-clusterip.png)
+
+- 访问 service 
+   ```
+   curl 10.100.179.64:80
+   ```
+
+   在集群任何节点均可
+
+- 查看 service 详情
+   ```
+   kubectl describe svc
+
+   kubectl describe svc try-service-ci
+
+   kubectl describe svc -l app=try-service
+   ```
+
+   ![](../_media/Centos_7/K8S_应用/service-describe.png)
+
+   其中 endpoints 字段显示了 service 关联的 pod 列表，可以看到 pod 的 ip 地址，端口号，协议等信息。
+
+- 查看 endpoints
+   ```
+   kubectl get endpoints
+
+   kubectl get ep
+
+   kubectl get endpoints -l app=try-service
+   ```
+   ![](../_media/Centos_7/K8S_应用/service-endpoints.png)
+
+   可见 endpoints 的名称与 service 的名称相同，他们根据名称进行关联
+
+---
+
+每一个 service 服务创建完成后都会在集群 dns （domain name server）中动态添加一个资源记录，格式为 
+
+   `服务名.命名空间.域名后缀`
+
+   `SVC_NAME.NS_NAME.DOMAIN.LTD.`
+   - SVC_NAME：表示 service 的名称
+   - NS_NAME：service 的命名空间
+   - DOMAIN：dns 的域名
+     - 集群默认的域名后缀是 `svc.cluster.local.`
+   - LTD：dns的后缀
+  
+   以上栗子会生成记录：
+
+   `try-service-ci.default.svc.cluster.local`
+
+
+   在集群任何节点内均可访问该记录
+
+---
+
+可通过 `ipvsadm -Ln` 查看 ip 负载；
+
+### NodePort 类型
+
+> 可在集群外访问
+
+```
+vim try_service_np.yaml
+```
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: try-service-np
+   labels:
+      app: try-service
+spec:
+   type: NodePort
+   ports:
+   - port: 80                   
+     protocol: TCP            
+     targetPort: 8080             
+     nodePort: 30380
+   selector:
+      app: go 
+```
+
+![](../_media/Centos_7/K8S_应用/service-nodepoint.png)
+- 访问 service 
+   - 集群内访问
+      ```
+      curl 10.102.130.4:80
+      ```
+      `10.102.130.4:80` 是 k8s 集群内部的 service ip 地址，只能在 k8s 集群内部访问，在集群外无法访问。
+
+   - 集群外访问
+   
+      `物理机的IP地址:nodePort`
+
+      栗：在浏览器中应访问
+
+      `http://192.168.40.180:30380/`
+
+      请求流向：客户端请求物理机 ip -> docker0 虚拟网卡 ip -> service ip ->  分配至 pod ip
+
+### LoadBalancer 类型
+   ...
+
+### ExternalName 类型
+> 可用于跨名称空间访问 service
+> 
+> 还可用于将外部服务导入到 k8s 集群中，并将外部服务的地址作为 service 的地址暴露给 k8s 集群内部的服务。
+
+
+```
+vim try_service_en.yaml
+```
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: try-service-en
+   namespace: test-ns                                       # 指定命名空间
+spec:
+   type: ExternalName
+   externalName: try-service-ci.default.svc.cluster.local   # 外部服务的软链地址
+   ports:
+   - port: 80                   
+     protocol: TCP  
+     targetPort: 8080             
+```
+
+![](../_media/Centos_7/K8S_应用/service-externalname.png)
+
+随后 test-ns 命名空间中的 service 就可以访问到 try-service-ci.default.svc.cluster.local 这个服务了。
+
+---
+
+## 映射外部服务
+
+> 通过创建一个 service，将外部服务的地址作为 service 的地址暴露给 k8s 集群内部的服务。
+
+创建一个 service
+```
+vim service_mysql.yaml
+```
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: mysql
+spec:
+   type: ClusterIP
+   ports:
+   - port: 3306
+```
+`apply` 后通过 `kubectl describe svc mysql` 查看 service 详情，发现 `mysql` `service` 的 `endpoind`为空
+
+创建同名 endpoint
+```
+vim endpoint_mysql.yaml
+```
+```
+apiVersion: v1
+kind: Endpoints
+metadata:
+   name: mysql
+subsets:
+ - addresses:
+   - ip: 192.168.40.182          # 外部服务（mysql）的地址 
+   ports:
+   - port: 3306                  # 外部服务（mysql）的端口
+```
+
+此时 `mysql` `service` 的 `endpoind` 为 `192.168.40.182:3306`。
+
+
+## 存储方案
+
+### emptyDir
+> 临时目录 （[官文](https://kubernetes.io/zh-cn/docs/concepts/storage/volumes/#emptydir)）
+> 
+> 在 Pod 所在 Node 节点创建一个临时目录，目录在 Pod 退出后会自动删除。
+
+```
+vim try_pod_emptydir.yaml
+```
+```
+apiVersion: v1
+kind: Pod
+metadata:
+   name: try-pod-emptydir
+spec:
+   containers:
+    - name: gogogo                     
+      ports:
+      - containerPort: 8080
+      image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+      imagePullPolicy: IfNotPresent   
+      volumeMounts:                    # 挂载数据卷
+       - name: try-emptydir            # 指定数据卷名称
+         mountPath: /cache             # 挂载的容器内目录
+   volumes:                            # 定义数据卷
+    - name: try-emptydir               
+      emptyDir: {}                     # emptyDir
+```
+
+- 查看 emptyDir 创建位置
+
+   Pod 被调度的 Node 节点的
+   `/var/lib/kubelet/pods/`[[pod_uid](#pod_uid)]`/volumes/kubernetes.io~empty-dir/` 下
+   ```
+   yum install tree -y
+
+   tree /var/lib/kubelet/pods/38e5a2fa-1fad-47d2-bda0-4f905b6ba2e3
+   ```
+   ![](../_media/Centos_7/K8S_应用/volume-emptydir.png)
+
+
+### hostPath
+> 在 Pod 所在 Node 节点创建一个持久化存储目录，Pod 退出后不会删除。
+>
+> 但是 Pod 被调度到别的 Node 节点也不会同步。
+
+```
+vim try_pod_hostPath.yaml
+```
+```
+apiVersion: v1
+kind: Pod
+metadata:
+   name: try-pod-hostpath
+spec:
+   containers:
+    - name: gogogo                     
+      ports:
+      - containerPort: 8080
+      image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+      imagePullPolicy: IfNotPresent   
+      volumeMounts:                    # 挂载数据卷
+       - name: try-hostpath            # 指定数据卷名称 要和 volumes 中的 name 一致
+         mountPath: /cache             # 挂载的容器内目录
+   volumes:                            # 定义数据卷
+    - name: try-hostpath               
+      hostPath:
+         path: /volume/hostPath
+         type: DirectoryOrCreate       # ↓ DirectoryOrCreate：创建目录，Directory：目录必须存在 ↓↓↓
+```
+![](../_media/Centos_7/K8S_应用/hostpath-type.png)
+
+直接到 Pod 被调度的 Node 宿主机上查看目录 `/volume/hostPath`。
+
+
+### NFS
+
+> NFS：网络文件系统 (Network File System)
+>
+> 由 SUN 公司研制的 UNIX 表示层协议 (presentation layer protocol)，能使使用者访问网络上别处的文件就像在使用自己的计算机一样
+
+#### 搭建 NFS 服务器
+
+1. 安装 NFS 服务
+   ```
+   yum install nfs-utils -y
+   ```
+2. 在宿主机创建共享目录 
+   栗：master 节点
+   ```
+   mkdir /data/volumes -pv
+   ```
+   - -p：逐级创建目录
+   - -v：显示详细信息
+3. 配置
+   ```
+   vim /etc/exports
+   ```
+   ```
+   /data/volumes *(rw,no_root_squash)
+   ```
+   - `/data/volumes`：要共享的目录。任何挂载了这个 NFS 共享目录的客户端都可以访问这个目录以及其下的文件和子目录。
+
+   - *(rw,no_root_squash)：针对前面目录的访问控制设置。
+
+      - *：表示允许所有客户端访问
+      - rw：允许读写访问
+      - no_root_squash：默认情况下，NFS会对客户端的root用户进行"squash"（压平）处理，也就是说，root用户在访问NFS共享目录时会被映射成匿名用户，只拥有有限的权限。但是，当设置了no_root_squash后，NFS 不会对 root 用户进行压平处理，而是给予其完全的读写权限。这意味着客户端的root用户可以像在本地系统上一样完全控制这个 NFS 共享目录。
+
+4. 使配置生效
+   ```
+   exportfs -arv
+   ```
+   - -a：这个选项表示“全部挂载或卸载”。当与 `exportfs -av` 一起使用时，它会列出所有当前导出的共享目录。
+   - -r：这个选项表示“重新挂载”。当与 `exportfs -av` 一起使用时，它会重新导出所有共享目录。
+   - -u：这个选项表示“卸载某个目录”。你需要指定要卸载的目录的路径。
+   - -v：这个选项表示“显示共享目录”。当与 `exportfs -av` 一起使用时，它会显示共享目录的详细信息。
+ 
+   重启
+   ```
+   service nfs restart
+   ```
+  
+5. 启动
+
+   设置开机自启
+   ```
+   systemctl enable nfs
+   ```
+   ---
+   ```
+   systemctl enable  nfs –now
+   ```
+   ---
+
+6. 状态查看
+   ```
+   systemctl status nfs
+   ```
+
+---
+
+7. 其他节点安装 NFS 服务并挂载
+   - 安装
+      ```
+      yum install nfs-utils -y
+      systemctl enable nfs –now
+      ```
+   - 挂载
+     ```
+     mkdir /nfs/test -pv
+     ```
+     ```
+     mount 192.168.40.180:/data/volumes /nfs/test
+
+     mount [nfs 服务器 IP]:[nfs 共享目录] [本地挂载目录]
+     ```
+
+   - 查看挂载信息
+      ```
+      df -h
+
+      df -h | grep nfs
+      ```
+      ![](../_media/Centos_7/K8S_应用/nfs-mount.png)
+
+   - 卸载
+     ```
+     umount /nfs/test
+     ```
+
+#### Pod 挂载 NFS 共享目录
+
+```
+vim try_pod_nfs.yaml
+```
+```
+apiVersion: v1
+kind: Pod
+metadata:
+   name: try-pod-nfs
+spec:
+   containers:
+    - name: gogogo                     
+      ports:
+      - containerPort: 8080
+      image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+      imagePullPolicy: IfNotPresent   
+      volumeMounts:                    # 挂载数据卷
+       - name: try-nfs                 # 指定数据卷名称
+         mountPath: /cache             # 挂载的容器内目录
+   volumes:                            # 定义数据卷
+    - name: try-nfs                    # 数据卷名称
+      nfs:                             # NFS
+         path: /data/volumes           # NFS 共享目录
+         server: 192.168.40.180        # NFS 服务器 IP
+```
+
+### PV
+
+> PersistentVolume (PV)：持久化存储
+>
+> PV 的创建和配置由管理员进行，而 PV 的使用则通过 PV Claim（Persistent Volume Claim，持久化卷声明）来实现。PVC 表达的是用户对存储的请求，类似于Pod对计算能力的请求。用户可以请求特定大小和访问模式的 PV 资源。
+
+> **PV 一对一 PVC 多对多 POD**
+
+
+#### PV 创建
+```
+vim try_pv.yaml
+```
+```
+apiVersion: v1
+kind: PersistentVolume                 # PV
+metadata:
+   name: try-pv
+   labels:
+      pv: try
+spec: 
+   nfs:                                # 选用 NFS 作为存储类型
+      server: 192.168.40.180           
+      path: /data/volumes
+   accessModes: ["ReadWriteOnce"]      # ↓↓↓ PV 的访问模式，可选：ReadWriteOnce、ReadOnlyMany、ReadWriteMany ↓↓↓
+   capacity:                           # 容量
+      storage: 1Gi                     # 1G
+```
+```
+kubectl apply -f try_pv.yaml
+```
+
+![](../_media/Centos_7/K8S_应用/pv-accessmodes.png)
+
+- 查看
+   ```
+   kubectl get pv
+   ```
+   ↑↑↑
+   ![](../_media/Centos_7/K8S_应用/pv.png) 
+
+
+#### PVC 创建
+
+```
+vim try_pvc.yaml
+```
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: try-pvc
+spec:
+   accessModes: ["ReadWriteOnce"]
+   selector:
+      matchLabels:
+         pv: try
+   resources:
+      requests: 
+         storage: 1Gi
+```
+```
+kubectl apply -f try_pvc.yaml
+```
+
+- 查看
+   ```
+   kubectl get pvc
+   ```
+   ![](../_media/Centos_7/K8S_应用/pvc.png)
+
+- 删除
+   ```
+   kubectl delete pvc try-pvc
+   ```
+   此时对应 pv 状态变为 Released
+   ![](../_media/Centos_7/K8S_应用/pv-released.png)
+
+   - 不同操作下的 pv pvc 状态
+      ![](../_media/Centos_7/K8S_应用/pv-pvc-optionstatus.webp)
