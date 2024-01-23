@@ -347,13 +347,15 @@
             这个选项的作用是设置一个“优雅退出”的时间段为0。优雅退出时间段是Kubernetes给正在运行的Pod一个机会，让它能够自己清理并正常关闭的时间。如果Pod在这个时间段内完成了清理工作并停止运行，那么它就不会被强制停止。但是，如果你设置了--grace-period=0，那么Kubernetes会立即强制停止并删除Pod，而不会等待它自己关闭。
 
 - 控制器式 Pod
-  > 利用控制器来管理 Pod 资源，确保 Pod 始终维持在指定的副本数运行
+   > 利用控制器来管理 Pod 资源，确保 Pod 始终维持在指定的副本数运行
 
-  > 常见的管理Pod的控制器：Replicaset、Deployment、Job、CronJob、Daemonset、Statefulset。
+   > 常见的管理Pod的控制器：Replicaset、Deployment、Job、CronJob、Daemonset、Statefulset。
 
-  - #### Replicaset
+   - #### Replicaset
 
       > 通过 Replicaset 管理 Pod
+
+      > 似乎只有多副本管理，最基础的控制器
 
       查看 Replicaset 释义 可以简写为
       ```
@@ -397,7 +399,7 @@
 
          kubectl get rs
          ```
-  - #### Deployment
+   - #### Deployment
 
       > 通过 Deployment 管理 Pod
 
@@ -490,6 +492,67 @@
       ---
       其余命令与自主式 Pod 相同。
 
+   - #### Statefulset
+
+      > 通过 Statefulset 管理 Pod
+
+      > Statefulset 是为有状态的 Pod 而设计的，例如 MySQL。
+      >
+      > 所管理的Pod、pv、pvc 的名称不随意变化， 是有序的
+
+      ```
+      vim try_statefulset.yaml
+      ```
+      ```
+                                       # statefulset 必须有一个 Service
+      apiVersion: v1
+      kind: Service
+      metadata:
+         name: statefuset-service
+         labels:
+            app: statefulset
+      spec:
+         ports:
+         - name: statefulset-go
+         port: 80
+         clusterIP: None
+         selector:
+         app: statefulset
+      ---                              # 用以分隔多个资源定义
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+         name: try-staefulset
+      spec:
+         selector:
+            matchLabels:
+               app: statefulset-go
+         serviceName: statefuset-service
+         replicas: 2
+         template:
+            metadata:
+               labels:
+                  app: statefulset-go
+            spec:
+               containers:
+               - name: con-go
+                 image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+                 imagePullPolicy: IfNotPresent
+                 ports:
+                 - containerPort: 8080
+      ```
+
+      - 查看
+         ```
+         kubectl get statefulset
+         ```
+
+      - 查看 pod
+         ```
+         kubectl get pods -l app=statefulset-go
+         ```
+
+         ![](../_media/Centos_7/K8S_应用/statefulset-pod.png)
 
 - 通过命令行创建 Pod
   > 通过 `kubectl run` 创建 Pod
@@ -667,7 +730,7 @@ kubectl apply -f namespace-quota.yaml
   kubectl describe pod pod-resourcequota-test -n test-namespace | grep Tolerations
   ```
 
-# 生命周期
+## 生命周期
 
 ![](../_media/Centos_7/K8S_应用/lifecycle.png)
 
@@ -989,7 +1052,7 @@ spec:
 
 ---
 
-## 映射外部服务
+### 映射外部服务
 
 > 通过创建一个 service，将外部服务的地址作为 service 的地址暴露给 k8s 集群内部的服务。
 
@@ -1255,6 +1318,11 @@ spec:
    accessModes: ["ReadWriteOnce"]      # ↓↓↓ PV 的访问模式，可选：ReadWriteOnce、ReadOnlyMany、ReadWriteMany ↓↓↓
    capacity:                           # 容量
       storage: 1Gi                     # 1G
+   persistentVolumeReclaimPolicy: Retain   # PV 的回收策略，可选：
+                                             # Recycle
+                                             # Retain [默认值]
+                                             # Delete
+                                             # 当前版本测试没啥影响啊？！
 ```
 ```
 kubectl apply -f try_pv.yaml
@@ -1266,7 +1334,9 @@ kubectl apply -f try_pv.yaml
    ```
    kubectl get pv
    ```
+
    ↑↑↑
+   
    ![](../_media/Centos_7/K8S_应用/pv.png) 
 
 
@@ -1281,10 +1351,10 @@ kind: PersistentVolumeClaim
 metadata:
    name: try-pvc
 spec:
-   accessModes: ["ReadWriteOnce"]
+   accessModes: ["ReadWriteOnce"]      # 应包含在 pv 的 accessModes 内
    selector:
       matchLabels:
-         pv: try
+         pv: try                       # 与 pv 的 label 一致
    resources:
       requests: 
          storage: 1Gi
@@ -1304,7 +1374,74 @@ kubectl apply -f try_pvc.yaml
    kubectl delete pvc try-pvc
    ```
    此时对应 pv 状态变为 Released
+
    ![](../_media/Centos_7/K8S_应用/pv-released.png)
+
+   单单重新应用 pvc 不会重新绑定 pv
+
+   因为此时 pv 内存的 PV 与 PVC 的映射关系未被删除
+
+   ```
+   kubectl describe pv try-pv
+   ```
+   ![](../_media/Centos_7/K8S_应用/pc_claim.png)
+
+   **可以选择删除 pv，重新创建 pvc，pvc 重新绑定 pv**
+
+   `/! 或 !/` 通过编辑 pv，手动删除 pv 内部的 PV 与 PVC 的映射关系
+   ```
+   kubectl edit pv try-pv
+   ```
+
+   ![](../_media/Centos_7/K8S_应用/edit-pv-pvcref.png)
+
+
 
    - 不同操作下的 pv pvc 状态
       ![](../_media/Centos_7/K8S_应用/pv-pvc-optionstatus.webp)
+
+#### 绑定 pod
+```
+vim try_pod_pvc.yaml
+```
+```
+apiVersion: v1
+kind: Pod
+metadata:
+   name: try-pod-pvc
+spec:
+   containers:
+    - name: gogogo                     
+      ports:
+      - containerPort: 8080
+      image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+      imagePullPolicy: IfNotPresent   
+      volumeMounts:                    # 挂载数据卷
+       - name: try-pvc-vol                # 指定数据卷名称
+         mountPath: /cache             # 挂载的容器内目录
+   volumes:                            # 定义数据卷
+    - name: try-pvc-vol                   # 数据卷名称
+      persistentVolumeClaim:           # PVC
+         claimName: try-pvc            # PVC 名称
+```
+
+---
+
+---
+---
+
+#### storageClass
+
+> pvc 可以通过 storageClass 自动创建 pv
+
+> 以 NFS Provider 为例
+> ##### [用 NFS 为 Kubernetes 提供网络存储](https://zhuanlan.zhihu.com/p/606727209)
+> 
+> ##### [[官] nfs-subdir-external-provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
+>
+
+
+
+
+
+
