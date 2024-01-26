@@ -498,7 +498,7 @@
 
       > Statefulset 是为有状态的 Pod 而设计的，例如 MySQL。
       >
-      > 所管理的Pod、pv、pvc 的名称不随意变化， 是有序的
+      > 所管理的 Pod、pv、pvc 的名称不随意变化， 是有序的
 
       ```
       vim try_statefulset.yaml
@@ -515,7 +515,7 @@
          ports:
          - name: statefulset-go
          port: 80
-         clusterIP: None
+         clusterIP: None               # 如果创建的 service 没有ip，那对这个 service 做dns 解析，会找到它所关联的 pod ip，如果创建的 service 有 ip，那对这个 service 做dns 解析，会解析到 service 本身 ip。
          selector:
          app: statefulset
       ---                              # 用以分隔多个资源定义
@@ -540,19 +540,42 @@
                  imagePullPolicy: IfNotPresent
                  ports:
                  - containerPort: 8080
+                 volumeMounts:
+               - name: statefulset-vc
+                 mountPath: /cache
+         volumeClaimTemplates:
+         - metadata:
+               name: statefulset-vc
+           spec:
+               accessModes: ["ReadWriteOnce"]
+               storageClassName: "storageclass-nfs"           # 这里才体现了 storageclass 的作用
+               resources:
+                  requests: 
+                     storage: 1Gi
       ```
+
+      ![statefulset](../_media/Centos_7/K8S_应用/statefuset.png)
 
       - 查看
          ```
          kubectl get statefulset
          ```
 
-      - 查看 pod
+      - 查看
          ```
          kubectl get pods -l app=statefulset-go
          ```
 
          ![](../_media/Centos_7/K8S_应用/statefulset-pod.png)
+
+         ststefulset 创建的 pod，是有域名的（域名组成：`pod-name.svc-name.svc-namespace.svc.cluster.local`）
+
+         <a id="storageclass-effect"></a>
+
+         ![](../_media/Centos_7/K8S_应用/statefulset-pv-c.png)
+
+      - 拓展 Headless service
+        > Headless service不分配clusterIP，headless service可以通过解析service的DNS,返回所有Pod的dns和ip地址 (statefulSet部署的Pod才有DNS)，普通的service,只能通过解析service的DNS返回service的ClusterIP。
 
 - 通过命令行创建 Pod
   > 通过 `kubectl run` 创建 Pod
@@ -1400,7 +1423,7 @@ kubectl apply -f try_pvc.yaml
    - 不同操作下的 pv pvc 状态
       ![](../_media/Centos_7/K8S_应用/pv-pvc-optionstatus.webp)
 
-#### 绑定 pod
+#### 绑定 pod <a id="pod_bound_pvc"></a>
 ```
 vim try_pod_pvc.yaml
 ```
@@ -1426,8 +1449,6 @@ spec:
 ```
 
 ---
-
----
 ---
 
 #### storageClass
@@ -1435,13 +1456,61 @@ spec:
 > pvc 可以通过 storageClass 自动创建 pv
 
 > 以 NFS Provider 为例
-> ##### [用 NFS 为 Kubernetes 提供网络存储](https://zhuanlan.zhihu.com/p/606727209)
-> 
-> ##### [[官] nfs-subdir-external-provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
 >
 
+> 参考：  
+> [用 NFS 为 Kubernetes 提供网络存储](https://zhuanlan.zhihu.com/p/606727209)  
+> [[官] nfs-subdir-external-provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)  
+> [Kubernetes 如何安装 NFS-Subdir-External-Provisioner存储插件？](https://blog.51cto.com/u_15181572/6172668)  
+> [Kubernetes 动态卷—NFS](https://www.cpweb.top/2244)
 
+```
+try_storageclass.yaml
+```
+```
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: storageclass-nfs
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner    # 跟安装 nfs provisioner 时候的 env 下的 PROVISIONER_NAME 的 value 值保持一致
+parameters:
+  server: 192.168.40.180
+  path: /data/volumes
+  readOnly: "false"
+```
+```
+kubectl apply -f try_storageclass.yaml
+```
 
+- 查看
+  ```
+  kubectl get sc
+  ```
+  ![](../_media/Centos_7/K8S_应用/sc-nfs.png)
 
+- 创建 PVC
+   ```
+   vim try_storageclass_pvc.yaml
+   ```
+   ```
+   apiVersion: v1
+   kind: PersistentVolumeClaim
+   metadata:
+   name: try-storageclass-pvc
+   spec:
+   accessModes: ["ReadWriteMany"]
+   resources:
+      requests:
+         storage: 1Gi
+   storageClassName: storageclass-nfs
+   ```
+   ```
+   kubectl apply -f try_storageclass_pvc.yaml
+   ```
+   ![](../_media/Centos_7/K8S_应用/sc-pvc.png)
 
+   - 自动生成 pv
+   ![](../_media/Centos_7/K8S_应用/sc-pvc-pv.png)
 
+   - [绑定到 Pod ↑](#pod_bound_pvc)  
+   - [与 StatefulSet 绑定 ↑](#storageclass-effect)
