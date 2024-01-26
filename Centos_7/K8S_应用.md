@@ -528,6 +528,14 @@
             matchLabels:
                app: statefulset-go
          serviceName: statefuset-service
+         updateStrategy:               # 更新策略
+            type: RollingUpdate        # 更新策略类型
+                                          # RollingUpdate 【默认值】 滚动更新
+                                          # OnDelete 重建更新 需要手动删除 重新创建
+            rollingUpdate:
+               partition: 1            # 更新的 pod 的编号大于等于此值
+                                          # 当前示例 replicas=2，则只会更新 编号为 1 的 pod，不会更新编号为 0 的那个
+               maxUnavailable: 0       # 更新时允许的最大不可用的 Pod 数量
          replicas: 2
          template:
             metadata:
@@ -576,6 +584,56 @@
 
       - 拓展 Headless service
         > Headless service不分配clusterIP，headless service可以通过解析service的DNS,返回所有Pod的dns和ip地址 (statefulSet部署的Pod才有DNS)，普通的service,只能通过解析service的DNS返回service的ClusterIP。
+
+   - #### Daemonset
+
+      > 通过 Daemonset 管理 Pod
+
+      > Daemonset 是为每个节点创建有且只有一个 Pod。并随 node 节点的增减而自动创建或删除 Pod。
+
+      ```
+      vim try-daemonset.yaml
+      ```
+      ```
+      kind: DaemonSet
+      metadata:
+         name: try-daemonset
+         labels:
+            app: daemonset-go
+      spec:
+         updateStrategy:
+            type: RollingUpdate              # 更新策略
+                                                # RollingUpdate 【默认值】 滚动更新
+                                                # OnDelete 重建更新 需要手动删除 重新创建
+            rollingUpdate:                   # 更新策略 针对 type=RollingUpdate
+               maxUnavailable: 1             # 更新时允许的最大不可用的 Pod 数量 因为每个节点仅能创建一个，所以这里为 1
+         selector:
+            matchLabels:
+               name: daemonset-go
+         template:
+            metadata:
+               labels:
+                  name: daemonset-go
+            spec:
+               containers:
+               - name: ds-con-go
+                 image: registry.cn-hangzhou.aliyuncs.com/ali-21-docker/ali-c317:try_go
+
+      ```
+
+      - 查看
+         ```
+         kubectl get daemonset
+
+         kubectl get ds
+         ```
+
+         ![](../_media/Centos_7/K8S_应用/daemonset.png)
+
+         - 查看 Pod
+         
+            ![](../_media/Centos_7/K8S_应用/daemonset-pod.png)
+
 
 - 通过命令行创建 Pod
   > 通过 `kubectl run` 创建 Pod
