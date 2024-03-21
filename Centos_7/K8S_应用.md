@@ -1572,3 +1572,74 @@ kubectl apply -f try_storageclass.yaml
 
    - [绑定到 Pod ↑](#pod_bound_pvc)  
    - [与 StatefulSet 绑定 ↑](#storageclass-effect)
+
+
+## ConfigMap
+
+ > ConfigMap 是一种抽象资源，用于存储非敏感的数据，例如配置文件、环境变量、数据库连接字符串等。
+
+ > 文件最大 1Mb
+
+ - 帮助
+   ```
+   kubectl create configmap --help
+   ```
+
+### 创建
+
+#### 命令行式创建
+```
+kubectl create configmap try-configmap --from-literal=port=8080 --from-literal=name=try-configmap
+---
+kubectl create configmap 文件名 --from-literal=key值=value值
+```
+![](../_media/Centos_7/K8S_应用/命令行-configmap.png)
+
+- 查看
+  ```
+  kubectl get configmap
+
+  kubectl get cm
+  ```
+
+  详情
+  ```
+  kubectl describe configmap try-configmap
+  ```
+  ![](../_media/Centos_7/K8S_应用/configmap-describe.png)
+
+#### 指定文件创建
+创建文件
+```
+vim try_configmap_f_nginx.conf
+```
+写入内容
+```
+server {
+  server_name www.nginx.com;
+  listen 80;
+  root /home/nginx/www/
+}
+```
+创建 configmap
+```
+kubectl create configmap try-configmap-file --from-file=try_configmap_f_nginx.conf
+
+---
+
+kubectl create configmap try-configmap-file --from-file=指定名称=try_configmap_f_nginx.conf
+```
+- 默认以文件名为名
+
+验证
+```
+kubectl describe configmap try-configmap-file
+```
+![](../_media/Centos_7/K8S_应用/configmap-describe-file.png)
+
+#### 指定目录
+> 一言蔽之，就是将指定目录下的所有文件都转换为 configmap 内容
+```
+kubectl create configmap try-configmap-dir --from-file=指定目录
+```
+ 
